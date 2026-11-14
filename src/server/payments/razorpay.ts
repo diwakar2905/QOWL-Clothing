@@ -5,14 +5,15 @@ import { GatewayError, type GatewayPayment, type GatewayRefund, type NormalisedE
 const API = "https://api.razorpay.com/v1";
 
 type RzpPayment = { id: string; order_id: string; status: string; amount: number; currency: string; method?: string; error_code?: string | null; error_description?: string | null };
-type RzpRefund = { id: string; payment_id: string; amount: number; status: string };
+type RzpRefund = { id: string; payment_id: string; amount: number; status: string; receipt?: string | null; notes?: Record<string, string> | [] };
 
 function mapPayment(p: RzpPayment): GatewayPayment {
   const status = (["created", "authorized", "captured", "failed", "refunded"].includes(p.status) ? p.status : "created") as GatewayPayment["status"];
   return { id: p.id, orderId: p.order_id, status, amount: p.amount, currency: p.currency, method: p.method ?? null, errorCode: p.error_code ?? null, errorDescription: p.error_description ?? null };
 }
 function mapRefund(r: RzpRefund): GatewayRefund {
-  return { id: r.id, paymentId: r.payment_id, amount: r.amount, status: r.status === "processed" ? "processed" : r.status === "failed" ? "failed" : "pending" };
+  const notes = Array.isArray(r.notes) ? {} : (r.notes ?? {});
+  return { id: r.id, paymentId: r.payment_id, amount: r.amount, status: r.status === "processed" ? "processed" : r.status === "failed" ? "failed" : "pending", ref: notes.refund_id ?? r.receipt ?? null };
 }
 
 /**
@@ -72,6 +73,11 @@ export class RazorpayGateway implements PaymentGateway {
 
   async refund(i: { paymentId: string; amount: number; receipt: string; notes: Record<string, string> }) {
     return mapRefund(await this.call<RzpRefund>("POST", `/payments/${encodeURIComponent(i.paymentId)}/refund`, { amount: i.amount, speed: "normal", receipt: i.receipt.slice(0, 40), notes: i.notes }));
+  }
+
+  async listRefunds(paymentId: string) {
+    const r = await this.call<{ items: RzpRefund[] }>("GET", `/payments/${encodeURIComponent(paymentId)}/refunds`);
+    return r.items.map(mapRefund);
   }
 
   verifyWebhook(rawBody: string, signature: string | null) {

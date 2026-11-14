@@ -13,7 +13,8 @@ export type GatewayPayment = {
   errorDescription?: string | null;
 };
 
-export type GatewayRefund = { id: string; paymentId: string; amount: number; status: "pending" | "processed" | "failed" };
+/** `ref` is our own refund id (sent as receipt/notes) so refunds can be matched after a timeout. */
+export type GatewayRefund = { id: string; paymentId: string; amount: number; status: "pending" | "processed" | "failed"; ref?: string | null };
 
 export type NormalisedEvent =
   | { kind: "payment.captured" | "payment.authorized" | "payment.failed" | "order.paid"; eventId: string; payment: GatewayPayment }
@@ -28,6 +29,7 @@ export interface PaymentGateway {
   fetchOrderPayments(orderId: string): Promise<GatewayPayment[]>;
   capture(paymentId: string, amount: number): Promise<GatewayPayment>;
   refund(input: { paymentId: string; amount: number; receipt: string; notes: Record<string, string> }): Promise<GatewayRefund>;
+  listRefunds(paymentId: string): Promise<GatewayRefund[]>;
   verifyWebhook(rawBody: string, signature: string | null): boolean;
   parseWebhook(rawBody: string, headers: Headers): NormalisedEvent;
   publicConfig(): { provider: "razorpay" | "mock"; keyId?: string };

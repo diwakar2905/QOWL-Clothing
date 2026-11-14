@@ -75,10 +75,13 @@ export class MockGateway implements PaymentGateway {
     const o = await findByPayment(i.paymentId);
     const already = o.refunds.filter((r) => r.paymentId === i.paymentId && r.status !== "failed").reduce((s, r) => s + r.amount, 0);
     if (already + i.amount > o.amount) throw new GatewayError("Refund exceeds captured amount", 400);
-    const r: GatewayRefund = { id: `mockrfnd_${sha256(i.receipt).slice(0, 14)}`, paymentId: i.paymentId, amount: i.amount, status: "processed" };
+    const r: GatewayRefund = { id: `mockrfnd_${sha256(i.receipt).slice(0, 14)}`, paymentId: i.paymentId, amount: i.amount, status: "processed", ref: i.receipt };
     if (!o.refunds.some((x) => x.id === r.id)) o.refunds.push(r);
     await save(o);
     return r;
+  }
+  async listRefunds(paymentId: string) {
+    return (await findByPayment(paymentId)).refunds.filter((r) => r.paymentId === paymentId);
   }
   sign(rawBody: string) {
     return hmacSha256Hex(this.secret, rawBody);

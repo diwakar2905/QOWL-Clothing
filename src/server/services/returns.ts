@@ -8,7 +8,7 @@ import type { ReturnStatus } from "@/generated/prisma/enums";
 import { enqueueEmail } from "@/server/notifications/outbox";
 import { getSetting } from "./settings";
 import { nextNumber, orderLink, recordHistory, lockOrder, type Actor } from "./orders";
-import { commitOrderStock, receiveReturnedUnits, resolveInspectedUnits } from "./inventory";
+import { commitOrderStock, logMovement, receiveReturnedUnits, resolveInspectedUnits } from "./inventory";
 import { createRefund } from "./refunds";
 import { audit } from "./audit";
 
@@ -39,6 +39,11 @@ export async function requestReturn(orderId: string, input: z.input<typeof retur
   const ok = canRequestReturn(policy, order, data.type);
   if (!ok.ok) throw new AppError("NOT_ELIGIBLE", ok.reason, 409);
   if (policy.requirePhotos && data.photoUrls.length === 0) throw new AppError("PHOTOS_REQUIRED", "Please add at least one photo of the item.");
+  if (data.photoUrls.length) {
+    // Only accept images this customer uploaded through our validated upload endpoint.
+    const owned = await db.mediaAsset.count({ where: { url: { in: data.photoUrls }, storageKey: { startsWith: "returns/" }, uploadedBy: actor.userId ?? "__none__" } });
+    if (owned !== new Set(data.photoUrls).size) throw new AppError("INVALID_PHOTO", "Please re-upload your photos.");
+  }
   if (!policy.reasons.includes(data.reason)) throw new AppError("INVALID_REASON", "Select a reason from the list.");
   for (const it of data.items) {
     const line = order.items.find((i) => i.id === it.orderItemId);
@@ -65,7 +70,7 @@ export async function requestReturn(orderId: string, input: z.input<typeof retur
       },
     });
     await recordHistory(tx, orderId, "RETURN", null, `${data.type} ${number} REQUESTED`, actor);
-    await enqueueEmail({ template: "return_requested", to: order.email, vars: { name: order.customerName, type: data.type.toLowerCase(), returnNumber: number, orderNumber: order.number, link: orderLink(order.number) }, dedupeKey: `return_requested:${created.id}` }, tx);
+    await enqueueEmail({ template: "return_requested", to: order.email, vars: { name: order.customerName, type: data.type.toLowerCase(), returnNumber: number, orderNumber: order.number, link: orderLink(order) }, dedupeKey: `return_requested:${created.id}` }, tx);
     return created;
   });
   return rr;
@@ -94,7 +99,7 @@ export async function transitionReturn(returnId: string, to: ReturnStatus, actor
     await audit({ actorId: actor.id, action: "return.transition", entityType: "ReturnRequest", entityId: rr.id, before: { status: rr.status }, after: { status: to } }, tx);
     if (CUSTOMER_NOTIFY.includes(to)) {
       await enqueueEmail(
-        { template: "return_update", to: rr.order.email, vars: { name: rr.order.customerName, type: rr.type.toLowerCase(), returnNumber: rr.number, status: humanise(to), note: opts.rejectionReason ?? opts.note ?? "", link: orderLink(rr.order.number) }, dedupeKey: `return:${rr.id}:${to}` },
+        { template: "return_update", to: rr.order.email, vars: { name: rr.order.customerName, type: rr.type.toLowerCase(), returnNumber: rr.number, status: humanise(to), note: opts.rejectionReason ?? opts.note ?? "", link: orderLink(rr.order) }, dedupeKey: `return:${rr.id}:${to}` },
         tx,
       );
     }
@@ -166,13 +171,13 @@ export async function shipExchange(returnId: string, details: { courierName: str
     await tx.$executeRaw`UPDATE "InventoryMovement" SET "orderId" = ${rr.orderId}, "returnId" = ${rr.id} WHERE "orderId" = ${`exchange:${rr.id}`}`;
     for (const l of lines) {
       await tx.$executeRaw`UPDATE "InventoryLevel" SET "committed" = GREATEST("committed" - ${l.quantity}, 0) WHERE "variantId" = ${l.variantId}`;
-      await tx.inventoryMovement.create({ data: { variantId: l.variantId, type: "SHIPMENT", committedDelta: -l.quantity, onHandAfter: 0, orderId: rr.orderId, returnId: rr.id, actorId: actor.id, note: "Exchange replacement shipped" } });
+      await logMovement(tx, { variantId: l.variantId, type: "SHIPMENT", committedDelta: -l.quantity, orderId: rr.orderId, returnId: rr.id, actorId: actor.id ?? undefined, note: "Exchange replacement shipped" });
     }
     await tx.shipment.create({ data: { orderId: rr.orderId, provider: "manual", isExchange: true, courierName: details.courierName, awb: details.awb, trackingUrl: details.trackingUrl, status: "SHIPPED", shippedAt: new Date(), note: `Exchange ${rr.number}` } });
     await tx.returnRequest.update({ where: { id: returnId }, data: { status: "EXCHANGE_SHIPPED" } });
     await recordHistory(tx, rr.orderId, "RETURN", rr.status, `${rr.number} EXCHANGE_SHIPPED`, actor);
     await enqueueEmail(
-      { template: "return_update", to: rr.order.email, vars: { name: rr.order.customerName, type: "exchange", returnNumber: rr.number, status: "Replacement shipped", note: `${details.courierName} — ${details.awb}`, link: orderLink(rr.order.number) }, dedupeKey: `return:${rr.id}:EXCHANGE_SHIPPED` },
+      { template: "return_update", to: rr.order.email, vars: { name: rr.order.customerName, type: "exchange", returnNumber: rr.number, status: "Replacement shipped", note: `${details.courierName} — ${details.awb}`, link: orderLink(rr.order) }, dedupeKey: `return:${rr.id}:EXCHANGE_SHIPPED` },
       tx,
     );
   });

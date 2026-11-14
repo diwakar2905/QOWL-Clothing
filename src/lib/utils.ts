@@ -48,3 +48,13 @@ export function sizeRank(size: string): number {
   const i = SIZE_ORDER.indexOf(size.toUpperCase());
   return i === -1 ? 100 : i;
 }
+
+/**
+ * Image URLs the storefront can render with next/image: site-relative paths or
+ * the configured media CDN. Anything else would throw at render time.
+ */
+export function isRenderableImageUrl(url: string): boolean {
+  if (url.startsWith("/") && !url.startsWith("//")) return true;
+  const base = process.env.MEDIA_PUBLIC_BASE_URL;
+  return !!base && url.startsWith(base.replace(/\/$/, "") + "/");
+}

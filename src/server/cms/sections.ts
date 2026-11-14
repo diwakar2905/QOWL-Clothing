@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { isRenderableImageUrl } from "@/lib/utils";
 
 /** Per-type schemas for HomepageSection.data. Unknown fields are stripped. */
 const href = z.string().trim().max(300).refine((v) => v === "" || v.startsWith("/") || v.startsWith("https://"), "Use a site path (/...) or https:// URL");
-const img = z.string().trim().max(500).default("");
+const img = z.string().trim().max(500).refine((v) => v === "" || isRenderableImageUrl(v), "Upload the image or use a /path or media-CDN URL").default("");
 
 export const sectionDataSchemas = {
   HERO: z.object({ autoplay: z.boolean().default(false), intervalSeconds: z.number().int().min(4).max(20).default(7) }),
