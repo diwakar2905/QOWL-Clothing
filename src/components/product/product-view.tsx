@@ -80,7 +80,8 @@ export function ProductView({ p, conceptNotice, codEnabled, returnsSummary }: { 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1.75fr)_minmax(340px,1fr)] lg:gap-12">
       <div>
-        <Gallery images={galleryImages} conceptNotice={conceptNotice} />
+        {/* Remount per colour so the gallery resets to the first image */}
+        <Gallery key={colorId} images={galleryImages} conceptNotice={conceptNotice} />
         {showingOtherColour && <p className="mt-2 text-xs text-stone">Imagery for {color?.name} is coming soon; photos show another colourway.</p>}
       </div>
 

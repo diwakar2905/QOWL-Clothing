@@ -19,7 +19,7 @@ export async function evaluateCoupon(
   codeRaw: string,
   lines: CouponLineContext[],
   customer: { email?: string | null; userId?: string | null },
-  opts: { tx?: Tx; lockForUpdate?: boolean; excludeOrderId?: string } = {},
+  opts: { tx?: Tx; lockForUpdate?: boolean; excludeOrderId?: string; deferIdentityChecks?: boolean } = {},
 ): Promise<CouponEvaluation> {
   const client = opts.tx ?? db;
   const code = normaliseCode(codeRaw);
@@ -54,7 +54,7 @@ export async function evaluateCoupon(
 
   const check: CouponCheck = checkCoupon(
     coupon,
-    { now: new Date(), subtotal, eligibleSubtotal, timesUsed, timesUsedByCustomer, isFirstOrder: priorOrders === 0, hasCustomerIdentity: identity },
+    { now: new Date(), subtotal, eligibleSubtotal, timesUsed, timesUsedByCustomer, isFirstOrder: priorOrders === 0, hasCustomerIdentity: identity, deferIdentityChecks: opts.deferIdentityChecks },
     formatINR,
   );
   if (!check.ok) return { ok: false, code: check.code, message: check.message, coupon };

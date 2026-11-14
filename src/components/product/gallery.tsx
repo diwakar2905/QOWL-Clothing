@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Dialog } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, ZoomIn } from "@/components/ui/icons";
@@ -15,13 +15,6 @@ export function Gallery({ images, conceptNotice }: { images: GalleryImage[]; con
   const [mobileIndex, setMobileIndex] = useState(0);
   const scroller = useRef<HTMLDivElement>(null);
   const thumbs = useRef<HTMLDivElement>(null);
-  const key = images.map((i) => i.id).join();
-
-  useEffect(() => {
-    setActive(0);
-    setMobileIndex(0);
-    scroller.current?.scrollTo({ left: 0 });
-  }, [key]);
 
   if (!images.length) return <div className="flex aspect-[4/5] items-center justify-center bg-cream text-sm text-stone">Imagery coming soon</div>;
   const pair = [images[active], images[(active + 1) % images.length]].filter((x, i, a) => x && (i === 0 || a[0] !== x)) as GalleryImage[];

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getCurrentUser, hasPermission, requirePermission } from "@/server/auth/session";
@@ -37,7 +38,7 @@ export default async function ReturnAdmin({ params }: { params: Promise<{ id: st
               })}
             </ul>
             {r.photoUrls.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-2">{r.photoUrls.map((u) => { const h = safeHref(u); return h ? <a key={u} href={h} target="_blank" rel="noopener noreferrer" className="block h-24 w-24 overflow-hidden border hairline">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={h} alt="Customer return photo" className="h-full w-full object-cover" /></a> : null; })}</div>
+              <div className="mt-4 flex flex-wrap gap-2">{r.photoUrls.map((u) => { const h = safeHref(u); return h ? <a key={u} href={h} target="_blank" rel="noopener noreferrer" className="block h-24 w-24 overflow-hidden border hairline"><Image src={h} alt="Customer return photo" width={96} height={96} className="h-full w-full object-cover" /></a> : null; })}</div>
             )}
           </Card>
           {can("returns.manage") && <Card title="Workflow"><ReturnActions returnId={r.id} status={r.status} canReceive={can("returns.inspect")} /></Card>}

@@ -15,12 +15,12 @@ export function WishlistGrid({ initial, signedIn }: { initial: Card[] | null; si
   const [cards, setCards] = useState<Card[] | null>(initial);
   const guestKey = [...wishlist].sort().join(",");
   useEffect(() => {
-    if (initial || !wishlistReady) return;
-    if (!guestKey) return setCards([]);
+    if (initial || !wishlistReady || !guestKey) return;
     api<Card[]>(`/api/products/cards?ids=${guestKey.split(",").map(encodeURIComponent).join(",")}`).then(setCards).catch(() => setCards([]));
   }, [initial, wishlistReady, guestKey]);
   // Hide items the customer un-saves while on this page.
-  const list = cards === null ? null : wishlistReady ? cards.filter((c) => wishlist.has(c.id)) : cards;
+  const source = !initial && wishlistReady && !guestKey ? [] : cards;
+  const list = source === null ? null : wishlistReady ? source.filter((c) => wishlist.has(c.id)) : source;
 
   if (list === null) return <div className="flex justify-center py-20"><Loader2 className="h-5 w-5 animate-spin text-forest" /></div>;
   if (!list.length) {

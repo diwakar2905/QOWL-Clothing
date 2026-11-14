@@ -123,7 +123,7 @@ export async function buildCartView(cart: CartWithItems | null, customer: { emai
   let coupon = null;
   let eligible = new Set<string>();
   if (cart?.couponCode && couponLines.length) {
-    const ev = await evaluateCoupon(cart.couponCode, couponLines, customer);
+    const ev = await evaluateCoupon(cart.couponCode, couponLines, customer, { deferIdentityChecks: true });
     if (ev.ok) {
       coupon = ev.coupon;
       eligible = ev.eligibleKeys;

@@ -22,11 +22,13 @@ export function Header({ links, secondary }: { links: NavLink[]; secondary: NavL
   const { cartCount, setDrawerOpen, user } = useStore();
 
   // Close any overlay when the route changes (client-side navigation keeps state).
-  useEffect(() => {
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
     setMenuOpen(false);
     setSearchOpen(false);
-    setDrawerOpen(false);
-  }, [pathname, setDrawerOpen]);
+  }
+  useEffect(() => setDrawerOpen(false), [pathname, setDrawerOpen]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);

@@ -21,10 +21,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
   }, [open]);
 
   useEffect(() => {
-    if (q.trim().length < 2) {
-      setRes(null);
-      return;
-    }
+    if (q.trim().length < 2) return;
     const ctrl = new AbortController();
     const t = setTimeout(async () => {
       setLoading(true);
@@ -42,6 +39,8 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
     };
   }, [q]);
 
+  // Short queries show the "popular" chips rather than stale results.
+  const shown = q.trim().length < 2 ? null : res;
   const go = (query: string) => {
     if (!query.trim()) return;
     onClose();
@@ -78,9 +77,9 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
           </button>
         </form>
         <div className="mt-6 min-h-24" aria-live="polite">
-          {res && res.products.length > 0 && (
+          {shown && shown.products.length > 0 && (
             <ul className="divide-y hairline">
-              {res.products.map((p) => (
+              {shown.products.map((p) => (
                 <li key={p.slug}>
                   <Link href={`/products/${p.slug}`} onClick={onClose} className="flex items-center justify-between py-3 font-serif text-xl uppercase text-obsidian hover:text-forest">
                     {p.name}
@@ -90,21 +89,21 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
               ))}
             </ul>
           )}
-          {res && res.products.length === 0 && (
+          {shown && shown.products.length === 0 && (
             <p className="text-sm text-charcoal/80">
               No matches for “{q}”.
-              {res.suggestion && (
+              {shown.suggestion && (
                 <>
                   {" "}Did you mean{" "}
-                  <button type="button" onClick={() => setQ(res.suggestion!)} className="font-medium text-forest underline underline-offset-4">
-                    {res.suggestion}
+                  <button type="button" onClick={() => setQ(shown.suggestion!)} className="font-medium text-forest underline underline-offset-4">
+                    {shown.suggestion}
                   </button>
                   ?
                 </>
               )}
             </p>
           )}
-          {!res && (
+          {!shown && (
             <div className="flex flex-wrap gap-2">
               <span className="label mr-2 self-center text-stone">Popular</span>
               {["Hoodies", "T-Shirts", "Drop 001", "Forest Green"].map((s) => (

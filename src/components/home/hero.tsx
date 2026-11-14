@@ -20,10 +20,8 @@ export function Hero({ slides, autoplay, interval }: { slides: HeroSlideData[]; 
   const go = useCallback((i: number) => setIndex((i + count) % count), [count]);
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) setPlaying(false);
-  }, []);
-  useEffect(() => {
-    if (!playing || count < 2) return;
+    // Never auto-advance for users who prefer reduced motion.
+    if (!playing || count < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const t = setInterval(() => setIndex((i) => (i + 1) % count), interval * 1000);
     return () => clearInterval(t);
   }, [playing, count, interval]);

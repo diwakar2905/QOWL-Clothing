@@ -18,6 +18,8 @@ export type CouponContext = {
   timesUsedByCustomer: number;
   isFirstOrder: boolean;
   hasCustomerIdentity: boolean;
+  /** In the bag (before the email is known) identity rules are provisional; checkout enforces them. */
+  deferIdentityChecks?: boolean;
 };
 
 export type CouponCheck = { ok: true } | { ok: false; code: string; message: string };
@@ -29,11 +31,12 @@ export function checkCoupon(c: CouponRules, ctx: CouponContext, formatMoney: (p:
   if (c.startsAt && c.startsAt > ctx.now) return fail("COUPON_NOT_STARTED", "This code isn't active yet.");
   if (c.endsAt && c.endsAt <= ctx.now) return fail("COUPON_EXPIRED", "This code has expired.");
   if (c.usageLimit != null && ctx.timesUsed >= c.usageLimit) return fail("COUPON_EXHAUSTED", "This code has reached its usage limit.");
-  if (c.perCustomerLimit != null) {
+  const defer = !ctx.hasCustomerIdentity && ctx.deferIdentityChecks;
+  if (c.perCustomerLimit != null && !defer) {
     if (!ctx.hasCustomerIdentity) return fail("COUPON_NEEDS_IDENTITY", "Enter your email at checkout to use this code.");
     if (ctx.timesUsedByCustomer >= c.perCustomerLimit) return fail("COUPON_CUSTOMER_LIMIT", "You've already used this code.");
   }
-  if (c.firstOrderOnly) {
+  if (c.firstOrderOnly && !defer) {
     if (!ctx.hasCustomerIdentity) return fail("COUPON_NEEDS_IDENTITY", "Enter your email at checkout to use this code.");
     if (!ctx.isFirstOrder) return fail("COUPON_FIRST_ORDER", "This code is only valid on your first order.");
   }
