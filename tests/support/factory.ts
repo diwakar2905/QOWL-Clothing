@@ -1,8 +1,18 @@
 import { db } from "@/lib/db";
 import { testCookies } from "./integration-setup";
+import { createSession } from "@/server/auth/session";
 
 export function resetCookies() {
   testCookies.clear();
+}
+
+/** A fresh browser session signed in as a new, verified customer (checkout requires sign-in). */
+export async function asShopper() {
+  testCookies.clear();
+  const tag = Math.random().toString(36).slice(2, 10);
+  const user = await db.user.create({ data: { email: `shopper-${tag}@example.com`, name: "Test Shopper", emailVerifiedAt: new Date() } });
+  await createSession(user.id, { isStaff: false });
+  return user;
 }
 
 /** A fresh variant with exact stock, isolated from fixture data. */

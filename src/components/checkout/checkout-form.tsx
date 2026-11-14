@@ -189,6 +189,11 @@ export function CheckoutForm({
       await pay(result, sig);
     } catch (e) {
       const err = e as ApiCallError;
+      if (err.error?.code === "LOGIN_REQUIRED") {
+        // Session ended mid-checkout: sign in again and come back. The bag is kept.
+        window.location.assign("/login?next=/checkout");
+        return;
+      }
       if (err.error?.code === "TOTAL_CHANGED" || err.error?.code === "OUT_OF_STOCK" || err.error?.code === "CART_NOT_READY") await refreshCart();
       if (err.error?.code === "EXPIRED") setPending(null);
       showError(err.error?.fields ? "Please check the highlighted fields." : err.message);
@@ -205,11 +210,6 @@ export function CheckoutForm({
   return (
     <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_400px]">
       <form id="checkout-form" onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-10">
-        {!user && (
-          <p className="text-sm text-charcoal/80">
-            Checking out as a guest. <Link href="/login?next=/checkout" className="text-forest underline underline-offset-4">Sign in</Link> to use saved addresses.
-          </p>
-        )}
         <section aria-labelledby="contact-h">
           <h2 id="contact-h" className="label-wide mb-4">1 · Contact</h2>
           <div className="grid gap-4 sm:grid-cols-2">

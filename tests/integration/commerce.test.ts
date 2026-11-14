@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db";
-import { address, level, makeVariant, resetCookies } from "../support/factory";
+import { address, asShopper, level, makeVariant } from "../support/factory";
 import { addItem, getCartView, applyCoupon } from "@/server/services/cart";
 import { placeOrder } from "@/server/services/checkout";
 import { confirmCheckoutPayment, handlePaymentWebhook, reconcileOrderPayments } from "@/server/services/payments";
@@ -25,7 +25,7 @@ async function pay(providerOrderId: string, outcome: "success" | "failure") {
   return confirmCheckoutPayment({ providerOrderId, providerPaymentId: r.payment.id, signature: r.signature });
 }
 
-beforeEach(() => resetCookies());
+beforeEach(async () => { await asShopper(); });
 
 describe("guest checkout with online payment", () => {
   it("reserves stock, confirms on verified payment, commits stock and empties the bag", async () => {
@@ -89,7 +89,7 @@ describe("payment failures and expiry", () => {
     const first = await checkout(variant.id);
     const o = await db.order.findUniqueOrThrow({ where: { number: first.orderNumber } });
     await expireOrder(o.id);
-    resetCookies();
+    await asShopper();
     const second = await checkout(variant.id);
     await pay(second.payment!.providerOrderId, "success");
     await gw().simulate(first.payment!.providerOrderId, "success");
@@ -160,7 +160,7 @@ describe("coupons", () => {
     const o = await db.order.findUniqueOrThrow({ where: { number: res.orderNumber }, include: { couponRedemption: true } });
     expect(o.discountTotal).toBe(20000);
     expect(o.couponRedemption?.status).toBe("COMMITTED");
-    resetCookies();
+    await asShopper();
     await addItem({ variantId: variant.id, quantity: 1 });
     await applyCoupon("WELCOME10"); // no identity yet → allowed at bag level
     const v2 = await getCartView();
@@ -183,7 +183,7 @@ describe("COD", () => {
     expect((await level(variant.id)).committed).toBe(1);
     const prev = await db.siteSetting.findUniqueOrThrow({ where: { key: "payments" } });
     await saveSetting("payments", { ...(prev.value as object), codEnabled: false });
-    resetCookies();
+    await asShopper();
     await expect(checkout(variant.id, 1, { paymentMethod: "COD", phone: phone() })).rejects.toMatchObject({ code: "COD_UNAVAILABLE" });
     await db.siteSetting.update({ where: { key: "payments" }, data: { value: prev.value as object } });
   });

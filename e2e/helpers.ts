@@ -1,5 +1,6 @@
 import { createHmac, randomUUID } from "node:crypto";
 import pg from "pg";
+import { hash } from "@node-rs/argon2";
 import { expect, type Page } from "@playwright/test";
 
 export const pool = new pg.Pool({ connectionString: process.env.TEST_DATABASE_URL ?? "postgresql://qowl:qowl_dev_password@localhost:5432/qowl_test", max: 3 });
@@ -47,8 +48,30 @@ export async function addToBag(page: Page, slug: string, size: string) {
   await expect(page.getByRole("dialog", { name: /Your bag/ })).toBeVisible();
 }
 
+/** Creates a verified customer and signs in on the current login page (checkout requires sign-in). */
+export async function signInNewShopper(page: Page) {
+  const email = `e2e-shopper-${uid()}@example.com`;
+  const password = "E2E-shopper-pass-1";
+  await pool.query(
+    `INSERT INTO "User"(id,email,"passwordHash",name,"emailVerifiedAt","updatedAt") VALUES($1,$2,$3,'E2E Shopper',now(),now())`,
+    [`e2eu${uid()}`, email, await hash(password)],
+  );
+  await page.getByLabel("Email", { exact: true }).fill(email);
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.waitForURL(/\/checkout$/);
+  return email;
+}
+
 export async function fillCheckout(page: Page, opts: { email?: string; skipContact?: boolean } = {}) {
-  if (!opts.skipContact) await page.getByLabel("Email", { exact: true }).fill(opts.email ?? `e2e-${uid()}@example.com`);
+  // Guests are sent to sign in first and brought back with their bag.
+  // Wait for whichever page actually rendered (the redirect can land after the URL changes).
+  const heading = page.getByRole("heading", { level: 1, name: /^(Sign in|Checkout)$/i });
+  await heading.waitFor();
+  if (/sign in/i.test((await heading.textContent()) ?? "")) await signInNewShopper(page);
+  await page.getByLabel("Mobile number", { exact: true }).waitFor();
+  // Signed-in shoppers use their account email (the field is read-only).
+  if (!opts.skipContact && (await page.getByLabel("Email", { exact: true }).isEditable())) await page.getByLabel("Email", { exact: true }).fill(opts.email ?? `e2e-${uid()}@example.com`);
   await page.getByLabel("Mobile number", { exact: true }).fill(phone());
   await page.getByLabel("Full name", { exact: true }).fill("E2E Shopper");
   await page.getByRole("textbox", { name: "Address line 1" }).fill("221 Test Street");

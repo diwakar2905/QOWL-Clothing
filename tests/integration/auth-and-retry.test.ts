@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db";
 import { sha256 } from "@/lib/crypto";
-import { address, level, makeVariant, resetCookies } from "../support/factory";
+import { address, asShopper, level, makeVariant, resetCookies } from "../support/factory";
 import { testCookies } from "../support/integration-setup";
 import { register, login, verifyEmail, signInWithGoogle } from "@/server/services/auth";
 import { hashPassword } from "@/server/auth/password";
@@ -68,6 +68,7 @@ describe("enumeration-safe lockout", () => {
 
 describe("changing details after a failed payment", () => {
   async function unpaid() {
+    await asShopper();
     const { variant } = await makeVariant(2);
     await addItem({ variantId: variant.id, quantity: 1 });
     const v = await getCartView();
@@ -97,6 +98,25 @@ describe("changing details after a failed payment", () => {
   it("requires the order's access token", async () => {
     const { res } = await unpaid();
     await expect(replaceUnpaidOrder(res.orderNumber, "wrong", null)).rejects.toMatchObject({ status: 404 });
+  });
+});
+
+describe("checkout requires sign-in", () => {
+  it("refuses guests and staff, and accepts a signed-in customer", async () => {
+    const { variant } = await makeVariant(2);
+    await addItem({ variantId: variant.id, quantity: 1 });
+    const v = await getCartView();
+    const input = () => ({ idempotencyKey: randomUUID(), email: `gate-${uniq()}@example.com`, phone: "9876543210", address, paymentMethod: "ONLINE" as const, acceptTerms: true as const, expectedTotal: v.pricing.grandTotal });
+    await expect(placeOrder(input(), { ip: "t" })).rejects.toMatchObject({ code: "LOGIN_REQUIRED", status: 401 });
+    await login({ email: "admin@qowl.test", password: "QowlAdmin#2026dev" }, { ip: "t", staffOnly: true });
+    await expect(placeOrder(input(), { ip: "t" })).rejects.toMatchObject({ code: "CUSTOMER_ACCOUNT_REQUIRED" });
+    // A guest's bag survives signing in.
+    resetCookies();
+    await addItem({ variantId: variant.id, quantity: 1 });
+    const shopper = await db.user.create({ data: { email: `gate-${uniq()}@example.com`, passwordHash: await hashPassword("a-good-password-1"), emailVerifiedAt: new Date() } });
+    await login({ email: shopper.email, password: "a-good-password-1" }, { ip: "t" });
+    const res = await placeOrder({ ...input(), expectedTotal: (await getCartView()).pricing.grandTotal }, { ip: "t" });
+    expect((await db.order.findUniqueOrThrow({ where: { number: res.orderNumber } })).userId).toBe(shopper.id);
   });
 });
 
