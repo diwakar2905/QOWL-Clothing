@@ -47,3 +47,13 @@ How accounts are matched:
 - A new Google user gets a verified account with no password (they can set one later with *Forgot password*).
 - An existing account with the same email is linked. If that account's email was never verified, its password is removed and its sessions are ended, because someone else may have registered it.
 - Staff accounts can't use Google; they keep using `/admin/login`.
+
+## Vercel
+
+`vercel.json` runs `prisma migrate deploy` before every build and schedules `/api/cron/jobs` once a day (Vercel sends `Authorization: Bearer $CRON_SECRET` automatically).
+
+1. **Database:** Vercel can't reach a database on your own computer. Create a hosted Postgres (Vercel → Storage → Neon, or Supabase) and set `DATABASE_URL` to its **pooled** connection string, with `?sslmode=require`. Set `DATABASE_POOL_SIZE=3` (each serverless instance opens its own pool).
+2. **Required variables** (Settings → Environment Variables, Production): `APP_URL` (e.g. `https://qowlclothing.vercel.app`), `DATABASE_URL`, `DATABASE_POOL_SIZE`, `SESSION_SECRET`, `CRON_SECRET`, `TRUST_PROXY=true`, payment (`PAYMENT_PROVIDER=razorpay` + Razorpay keys), `EMAIL_PROVIDER` (+ `RESEND_API_KEY`), storage (below), optional Google keys.
+3. **Uploads:** Vercel's disk is temporary, so admin image uploads need `STORAGE_DRIVER=s3` (AWS S3 or Cloudflare R2).
+4. **First data:** after the first deploy, run once from your computer against the hosted database: `DATABASE_URL="<hosted url>" npm run db:seed` (`SEED_FIXTURES=true` only for a demo store), or create an owner with `npm run admin:create`.
+5. **Background jobs** (expire unpaid orders, send queued emails, reconcile payments): the Hobby plan only allows daily crons. On Pro, change the schedule to `*/5 * * * *`; on Hobby, call `/api/cron/jobs` every 5 minutes from an external scheduler (e.g. cron-job.org) with the `Authorization: Bearer <CRON_SECRET>` header.
