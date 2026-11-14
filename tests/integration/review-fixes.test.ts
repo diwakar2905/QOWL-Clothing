@@ -26,13 +26,14 @@ async function pendingOrder(qty = 1) {
 describe("review fixes", () => {
   it("an amount mismatch puts the order on hold and releases the stock hold", async () => {
     const { res, order, variant } = await pendingOrder(1);
+    const payId = `mockpay_${randomUUID()}`;
     expect((await level(variant.id)).reserved).toBe(1);
-    await finalizePaidOrder({ orderId: order.id, providerPaymentId: "mockpay_x__9", providerOrderId: res.payment!.providerOrderId, amount: order.grandTotal - 100, actor: { type: "WEBHOOK" } });
+    await finalizePaidOrder({ orderId: order.id, providerPaymentId: payId, providerOrderId: res.payment!.providerOrderId, amount: order.grandTotal - 100, actor: { type: "WEBHOOK" } });
     const o = await db.order.findUniqueOrThrow({ where: { id: order.id } });
     expect([o.status, o.paymentStatus]).toEqual(["ON_HOLD", "PAID"]);
     expect((await level(variant.id)).reserved).toBe(0);
     // A later correct-amount event on an already-paid order is a no-op.
-    const again = await finalizePaidOrder({ orderId: order.id, providerPaymentId: "mockpay_x__9", providerOrderId: res.payment!.providerOrderId, amount: order.grandTotal, actor: { type: "WEBHOOK" } });
+    const again = await finalizePaidOrder({ orderId: order.id, providerPaymentId: payId, providerOrderId: res.payment!.providerOrderId, amount: order.grandTotal, actor: { type: "WEBHOOK" } });
     expect(again.alreadyFinal).toBe(true);
   });
 
