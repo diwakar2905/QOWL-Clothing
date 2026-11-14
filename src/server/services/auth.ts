@@ -8,13 +8,15 @@ import { logger } from "@/lib/logger";
 import { hashPassword, verifyPassword, dummyVerify } from "@/server/auth/password";
 import { createSession, destroyAllSessions, destroyCurrentSession, getSession } from "@/server/auth/session";
 import { enqueueEmail } from "@/server/notifications/outbox";
-import { enforce } from "./rate-limit";
+import { enforce, hit, peek, clear } from "./rate-limit";
 import { mergeGuestCartOnLogin } from "./cart";
 import { audit } from "./audit";
 
 const appUrl = () => process.env.APP_URL ?? "http://localhost:3000";
-const LOCK_AFTER = 8;
-const LOCK_MINUTES = 15;
+// Failed sign-ins are counted per email address (whether or not an account
+// exists), so lockout behaviour cannot be used to discover accounts.
+const MAX_FAILURES = 10;
+const FAILURE_WINDOW_SECONDS = 15 * 60;
 
 export const registerSchema = z.object({
   name: z.string().trim().min(2, "Enter your name").max(80),
@@ -47,72 +49,92 @@ export async function sendVerificationEmail(userId: string) {
 export async function register(input: z.input<typeof registerSchema>, ctx: { ip: string; userAgent?: string }) {
   await enforce(`register:ip:${ctx.ip}`, 10, 3600, "Too many sign-up attempts. Please try again later.");
   const data = registerSchema.parse(input);
+  await enforce(`register:email:${sha256(data.email)}`, 3, 3600, "Too many sign-up attempts. Please try again later.");
+  // Hash first in both branches so response timing doesn't reveal which path ran.
+  const passwordHash = await hashPassword(data.password);
   const existing = await db.user.findUnique({ where: { email: data.email } });
   if (existing) {
-    // Do not reveal whether the email is registered beyond what's necessary.
-    throw new AppError("EMAIL_IN_USE", "An account with this email already exists. Try signing in or resetting your password.", 409);
+    // Same response as a new sign-up; the owner is told by email instead.
+    if (existing.status !== "DELETED") {
+      await enqueueEmail({
+        template: "account_exists",
+        to: existing.email,
+        vars: { name: existing.name ?? "there", loginLink: `${appUrl()}/login`, resetLink: `${appUrl()}/forgot-password` },
+        dedupeKey: `account_exists:${existing.id}:${new Date().toISOString().slice(0, 10)}`,
+      });
+    }
+    return;
   }
   const user = await db.user.create({
     data: {
       email: data.email,
       name: data.name,
-      passwordHash: await hashPassword(data.password),
+      passwordHash,
       marketingOptIn: data.marketingOptIn,
       marketingConsentAt: data.marketingOptIn ? new Date() : null,
     },
   });
+  // The account is activated (and signed in) from the verification email.
   await sendVerificationEmail(user.id);
-  await createSession(user.id, { isStaff: false, ip: ctx.ip, userAgent: ctx.userAgent });
-  await mergeGuestCartOnLogin(user.id);
-  return user;
+  void ctx.userAgent;
 }
 
 export async function login(input: z.input<typeof loginSchema>, ctx: { ip: string; userAgent?: string; staffOnly?: boolean }) {
   const data = loginSchema.parse(input);
   await enforce(`login:ip:${ctx.ip}`, 30, 900, "Too many sign-in attempts. Please wait 15 minutes.");
-  await enforce(`login:email:${sha256(data.email)}`, 10, 900, "Too many sign-in attempts for this account. Please wait 15 minutes.");
+  const failKey = `loginfail:${sha256(data.email)}`;
+  if ((await peek(failKey)) >= MAX_FAILURES) throw tooManyFailures();
   const invalid = new AppError("INVALID_CREDENTIALS", "Incorrect email or password.", 401);
   const user = await db.user.findUnique({ where: { email: data.email }, include: { role: true } });
   if (!user || !user.passwordHash) {
     await dummyVerify(data.password);
+    await hit(failKey, MAX_FAILURES, FAILURE_WINDOW_SECONDS);
     throw invalid;
-  }
-  if (user.lockedUntil && user.lockedUntil > new Date()) {
-    throw new AppError("ACCOUNT_LOCKED", "This account is temporarily locked after repeated failed sign-ins. Try again later or reset your password.", 423);
   }
   const ok = await verifyPassword(user.passwordHash, data.password);
   if (!ok) {
-    const count = user.failedLoginCount + 1;
-    await db.user.update({
-      where: { id: user.id },
-      data: { failedLoginCount: count >= LOCK_AFTER ? 0 : count, lockedUntil: count >= LOCK_AFTER ? new Date(Date.now() + LOCK_MINUTES * 60_000) : undefined },
-    });
+    await hit(failKey, MAX_FAILURES, FAILURE_WINDOW_SECONDS);
     if (user.role) logger.warn("auth.staff_login_failed", { userId: user.id, ip: ctx.ip });
     throw invalid;
   }
+  await clear(failKey);
   if (user.status === "SUSPENDED" || user.status === "DELETED") throw new AppError("ACCOUNT_DISABLED", "This account is not active. Please contact support.", 403);
   if (ctx.staffOnly && !user.role) throw invalid;
-  await db.user.update({ where: { id: user.id }, data: { failedLoginCount: 0, lockedUntil: null, lastLoginAt: new Date() } });
+  await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   await createSession(user.id, { isStaff: !!user.role, ip: ctx.ip, userAgent: ctx.userAgent });
   if (!user.role) await mergeGuestCartOnLogin(user.id);
   if (user.role) await audit({ actorId: user.id, action: "staff.login", entityType: "User", entityId: user.id, ipAddress: ctx.ip });
   return user;
 }
 
+function tooManyFailures() {
+  return new AppError("RATE_LIMITED", "Too many failed sign-in attempts. Please wait 15 minutes or reset your password.", 429);
+}
+
 export async function logout() {
   await destroyCurrentSession();
 }
 
-export async function verifyEmail(token: string) {
+/**
+ * Confirms the email and signs the customer in (the token proves control of
+ * the inbox). Called from a button press, not the GET of the link, so email
+ * scanners that prefetch links can't consume the token.
+ */
+export async function verifyEmail(token: string, ctx: { ip?: string; userAgent?: string } = {}) {
   if (!token || token.length > 100) throw badRequest("Invalid verification link");
-  const rec = await db.authToken.findUnique({ where: { tokenHash: sha256(token) } });
-  if (!rec || rec.type !== "EMAIL_VERIFICATION" || rec.usedAt || rec.expiresAt < new Date()) {
+  const rec = await db.authToken.findUnique({ where: { tokenHash: sha256(token) }, include: { user: { include: { role: true } } } });
+  if (!rec || rec.type !== "EMAIL_VERIFICATION" || rec.usedAt || rec.expiresAt < new Date() || rec.user.status === "DELETED" || rec.user.status === "SUSPENDED") {
     throw new AppError("TOKEN_INVALID", "This verification link is invalid or has expired.", 400);
   }
   await db.$transaction([
     db.authToken.update({ where: { id: rec.id }, data: { usedAt: new Date() } }),
     db.user.update({ where: { id: rec.userId }, data: { emailVerifiedAt: new Date() } }),
   ]);
+  const current = await getSession();
+  if (!current || current.user.id !== rec.userId) {
+    await createSession(rec.userId, { isStaff: !!rec.user.role, ip: ctx.ip, userAgent: ctx.userAgent });
+    if (!rec.user.role) await mergeGuestCartOnLogin(rec.userId);
+  }
 }
 
 export async function requestPasswordReset(emailRaw: string, ctx: { ip: string }) {
@@ -139,10 +161,12 @@ export async function resetPassword(token: string, newPassword: string) {
   }
   await db.$transaction([
     db.authToken.update({ where: { id: rec.id }, data: { usedAt: new Date() } }),
-    db.user.update({ where: { id: rec.userId }, data: { passwordHash: await hashPassword(password), failedLoginCount: 0, lockedUntil: null, emailVerifiedAt: new Date() } }),
+    db.user.update({ where: { id: rec.userId }, data: { passwordHash: await hashPassword(password), emailVerifiedAt: new Date() } }),
   ]);
   // Invalidate every existing session after a reset.
   await destroyAllSessions(rec.userId);
+  const u = await db.user.findUniqueOrThrow({ where: { id: rec.userId } });
+  await clear(`loginfail:${sha256(u.email)}`);
 }
 
 export async function changePassword(userId: string, current: string, next: string) {

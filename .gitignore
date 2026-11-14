@@ -3,7 +3,8 @@ node_modules/
 out/
 coverage/
 src/generated/
-storage/
+# Local upload storage at the repo root only (not src/server/storage*)
+/storage/
 *.tsbuildinfo
 next-env.d.ts
 .env

@@ -15,6 +15,10 @@ import { hashPassword } from "@/server/auth/password";
 import { isPermission } from "@/server/auth/permissions";
 import { passwordSchema, emailSchema } from "@/lib/validation";
 import { str, opt, bool, intOrNull, istDate } from "./_util";
+import { isRenderableImageUrl } from "@/lib/utils";
+
+const imageUrl = (msg: string) => z.string().min(1, msg).max(500).refine(isRenderableImageUrl, "Upload the image or use a /path or media-CDN URL");
+const optImage = (v: string | null) => (v && !isRenderableImageUrl(v) ? (() => { throw new AppError("VALIDATION", "Images must be uploaded or use a /path or media-CDN URL."); })() : v);
 
 const hrefSchema = z.string().trim().max(300).refine((v) => v === "" || v.startsWith("/") || v.startsWith("https://"), "Use a site path (/...) or https:// URL");
 
@@ -72,8 +76,8 @@ export async function saveHeroSlideAction(_p: unknown, form: FormData) {
       eyebrow: opt(form, "eyebrow"),
       heading: z.string().min(1).max(60).parse(str(form, "heading")),
       subheading: opt(form, "subheading"),
-      desktopImageUrl: z.string().min(1, "Upload a desktop image").parse(str(form, "desktopImageUrl")),
-      mobileImageUrl: opt(form, "mobileImageUrl"),
+      desktopImageUrl: imageUrl("Upload a desktop image").parse(str(form, "desktopImageUrl")),
+      mobileImageUrl: optImage(opt(form, "mobileImageUrl")),
       imageAlt: z.string().min(3, "Describe the image").max(200).parse(str(form, "imageAlt")),
       isConcept: bool(form, "isConcept"),
       primaryLabel: opt(form, "primaryLabel"),
@@ -132,7 +136,7 @@ export async function saveLookbookImageAction(_p: unknown, form: FormData) {
     const u = await requirePermission("content.manage");
     const id = opt(form, "id");
     const data = {
-      imageUrl: z.string().min(1, "Upload an image").parse(str(form, "imageUrl")),
+      imageUrl: imageUrl("Upload an image").parse(str(form, "imageUrl")),
       alt: z.string().min(3, "Describe the image").max(200).parse(str(form, "alt")),
       caption: opt(form, "caption"),
       productId: opt(form, "productId"),

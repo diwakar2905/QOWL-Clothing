@@ -80,10 +80,19 @@ export async function reconcileOrderPayments(orderId: string) {
 /** Periodic job: reconcile orders still awaiting payment confirmation. */
 export async function reconcilePendingPayments(limit = 50) {
   const orders = await db.order.findMany({
-    where: { status: { in: ["PENDING_PAYMENT", "PAYMENT_FAILED", "EXPIRED"] }, paymentMethod: "ONLINE", placedAt: { gt: new Date(Date.now() - 3 * 86400_000), lt: new Date(Date.now() - 2 * 60_000) } },
+    where: {
+      paymentMethod: "ONLINE",
+      placedAt: { lt: new Date(Date.now() - 2 * 60_000) },
+      OR: [
+        { status: { in: ["PENDING_PAYMENT", "PAYMENT_FAILED"] }, placedAt: { gt: new Date(Date.now() - 3 * 86400_000) } },
+        // Expired holds are only re-checked for a day (catches late captures; webhooks cover the rest).
+        { status: "EXPIRED", placedAt: { gt: new Date(Date.now() - 86400_000) } },
+      ],
+    },
     select: { id: true },
     take: limit,
-    orderBy: { placedAt: "asc" },
+    // Newest first so a backlog of abandoned checkouts can't starve recent orders.
+    orderBy: { placedAt: "desc" },
   });
   let n = 0;
   for (const o of orders) {

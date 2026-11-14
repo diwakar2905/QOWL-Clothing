@@ -11,8 +11,15 @@ import { runAction } from "@/server/api";
 import { requirePermission } from "@/server/auth/session";
 import { audit } from "@/server/services/audit";
 import { buildSearchText } from "@/server/services/catalog";
+import { publishBlockers } from "@/server/services/catalog-admin";
 import { storeImage, deleteStoredImage } from "@/server/storage";
 import { str, opt, bool, intOrNull, paise, istDate, list } from "./_util";
+import { isRenderableImageUrl } from "@/lib/utils";
+
+const optImage = (v: string | null) => {
+  if (v && !isRenderableImageUrl(v)) throw new AppError("VALIDATION", "Images must be uploaded or use a /path or media-CDN URL.");
+  return v;
+};
 
 const slugRe = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -24,20 +31,6 @@ async function refreshSearchText(productId: string) {
   });
 }
 
-/** Activation checklist: never publish an incomplete product. */
-export async function publishBlockers(productId: string): Promise<string[]> {
-  const p = await db.product.findUniqueOrThrow({ where: { id: productId }, include: { taxClass: true, images: true, variants: { where: { isActive: true } } } });
-  const out: string[] = [];
-  if (!p.variants.length) out.push("Add at least one active size/colour variant.");
-  if (!p.images.length) out.push("Upload at least one image.");
-  if (p.salePrice != null && p.salePrice >= p.price) out.push("Sale price must be below the regular price.");
-  if (process.env.NODE_ENV === "production") {
-    if (!p.detailsApproved) out.push("Confirm that fabric, GSM, fit, care and origin details reflect the produced garment (Specifications approved).");
-    if (!p.taxClass.reviewedAt) out.push("The product's tax class has not been reviewed by a tax advisor (Settings → Tax).");
-    if (!p.countryOfOrigin || !(p.manufacturerInfo || p.marketerInfo)) out.push("Enter country of origin and manufacturer/marketer details.");
-  }
-  return out;
-}
 
 function productData(form: FormData) {
   const name = z.string().min(2).max(80).parse(str(form, "name"));
@@ -270,8 +263,8 @@ export async function saveCollectionAction(_p: unknown, form: FormData) {
       slug: z.string().regex(slugRe, "Use lowercase letters, numbers and dashes").parse(str(form, "slug") || slugify(title)),
       eyebrow: opt(form, "eyebrow"),
       description: opt(form, "description"),
-      heroImageUrl: opt(form, "heroImageUrl"),
-      mobileImageUrl: opt(form, "mobileImageUrl"),
+      heroImageUrl: optImage(opt(form, "heroImageUrl")),
+      mobileImageUrl: optImage(opt(form, "mobileImageUrl")),
       imageAlt: opt(form, "imageAlt"),
       type,
       rules: type === "RULE" ? ({ categorySlugs: list(form, "ruleCategories"), tags: list(form, "ruleTags") } as Prisma.InputJsonValue) : undefined,
@@ -325,7 +318,7 @@ export async function saveCategoryAction(_p: unknown, form: FormData) {
       name,
       slug: z.string().regex(slugRe).parse(str(form, "slug") || slugify(name)),
       description: opt(form, "description"),
-      imageUrl: opt(form, "imageUrl"),
+      imageUrl: optImage(opt(form, "imageUrl")),
       imageAlt: opt(form, "imageAlt"),
       sortOrder: intOrNull(form, "sortOrder") ?? 0,
       isActive: bool(form, "isActive"),

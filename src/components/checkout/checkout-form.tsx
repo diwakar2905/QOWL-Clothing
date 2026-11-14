@@ -58,7 +58,8 @@ export function CheckoutForm({
   const [selectedAddress, setSelectedAddress] = useState<string | "new">(addresses[0]?.id ?? "new");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [pending, setPending] = useState<CheckoutResult | null>(null);
+  // An unpaid order from a failed/dismissed payment, plus the details it was placed with.
+  const [pending, setPending] = useState<(CheckoutResult & { sig: string; rawSig: string }) | null>(null);
   const [codState, setCodState] = useState<{ pincode: string; ok: boolean; message?: string } | null>(null);
   const [mockOpen, setMockOpen] = useState<null | ((v: "success" | "failure" | "dismissed") => void)>(null);
   const errorRef = useRef<HTMLDivElement>(null);
@@ -68,6 +69,7 @@ export function CheckoutForm({
     register,
     handleSubmit,
     watch,
+    getValues,
     setValue,
     reset,
     formState: { errors },
@@ -132,14 +134,17 @@ export function CheckoutForm({
     setTimeout(() => errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
   };
 
-  const pay = async (result: CheckoutResult) => {
+  /** What an order is "about": if any of this changes, a retry must place a new order. */
+  const detailsSig = (v: { email?: string; phone?: string; address?: unknown; paymentMethod?: string }) => JSON.stringify([v.email, v.phone, v.address, v.paymentMethod]);
+
+  const pay = async (result: CheckoutResult, sig: string) => {
     if (!result.payment) {
       finish(result);
       return;
     }
     const outcome = await runPayment(result.payment, (orderId) => new Promise((resolve) => setMockOpen(() => (v: "success" | "failure" | "dismissed") => { setMockOpen(null); resolve(v); void orderId; })));
     if (outcome.status === "failed" || outcome.status === "dismissed") {
-      setPending(result);
+      setPending({ ...result, sig, rawSig: detailsSig(getValues()) });
       showError(outcome.message);
     } else finish(result);
   };
@@ -158,16 +163,30 @@ export function CheckoutForm({
     setError(null);
     setSubmitting(true);
     try {
-      if (pending) {
+      const sig = detailsSig(values);
+      if (pending && pending.sig === sig) {
         const again = await api<CheckoutResult>("/api/checkout/retry", { body: { orderNumber: pending.orderNumber, token: pending.accessToken || undefined } });
-        await pay({ ...again, accessToken: pending.accessToken });
+        await pay({ ...again, accessToken: pending.accessToken }, sig);
         return;
+      }
+      if (pending) {
+        // Details or payment method changed: release the unpaid order (after the server
+        // confirms with the gateway it really is unpaid), then place a fresh one.
+        const r = await api<{ status: "released" | "paid" }>("/api/checkout/replace", { body: { orderNumber: pending.orderNumber, token: pending.accessToken || undefined } });
+        if (r.status === "paid") {
+          finish(pending);
+          return;
+        }
+        setPending(null);
+        try {
+          sessionStorage.removeItem(KEY);
+        } catch {}
       }
       const codFee = values.paymentMethod === "COD" ? cod.fee : 0;
       const result = await api<CheckoutResult>("/api/checkout", {
         body: { ...values, idempotencyKey: idempotencyKey(), expectedTotal: cart.pricing.grandTotal + codFee, customerNote: values.customerNote || undefined },
       });
-      await pay(result);
+      await pay(result, sig);
     } catch (e) {
       const err = e as ApiCallError;
       if (err.error?.code === "TOTAL_CHANGED" || err.error?.code === "OUT_OF_STOCK" || err.error?.code === "CART_NOT_READY") await refreshCart();
@@ -310,7 +329,7 @@ export function CheckoutForm({
         {!cart.canCheckout && <FormMessage>{cart.blockers[0]} <Link href="/cart" className="underline">Review bag</Link></FormMessage>}
         <Button type="submit" form="checkout-form" size="lg" className="mt-5 w-full" loading={submitting} disabled={!cart.canCheckout}>
           <Lock className="h-4 w-4" />
-          {!cart.canCheckout ? "Review your bag to continue" : pending ? `Retry payment — ${formatINR(pending.amount)}` : paymentMethod === "COD" ? `Place order — ${formatINR(total)}` : `Pay ${formatINR(total)}`}
+          {!cart.canCheckout ? "Review your bag to continue" : pending && pending.rawSig === detailsSig(watch()) ? `Retry payment — ${formatINR(pending.amount)}` : paymentMethod === "COD" ? `Place order — ${formatINR(total)}` : `Pay ${formatINR(total)}`}
         </Button>
       </aside>
 

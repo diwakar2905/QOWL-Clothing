@@ -30,11 +30,17 @@ export async function adminLoginAction(_prev: unknown, form: FormData) {
 }
 
 export async function registerAction(_prev: unknown, form: FormData) {
-  const next = safeInternalPath(str(form, "next"), "/account");
-  const r = await runAction(async () => {
+  // Identical response whether or not the email already has an account.
+  return runAction(async () => {
     await auth.register({ name: str(form, "name"), email: str(form, "email"), password: str(form, "password"), marketingOptIn: form.get("marketingOptIn") === "on" }, { ip: await clientIp(), userAgent: await userAgent() });
+  }, "Check your inbox — we've emailed you a link to confirm your address and finish signing up.");
+}
+
+export async function confirmEmailAction(_prev: unknown, form: FormData) {
+  const r = await runAction(async () => {
+    await auth.verifyEmail(str(form, "token"), { ip: await clientIp(), userAgent: await userAgent() });
   });
-  if (r.ok) redirect(`${next}${next.includes("?") ? "&" : "?"}welcome=1`);
+  if (r.ok) redirect("/account?welcome=1");
   return r;
 }
 

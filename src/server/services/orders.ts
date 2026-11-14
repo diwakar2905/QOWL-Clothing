@@ -3,7 +3,7 @@ import { db, type Tx } from "@/lib/db";
 import { AppError, notFound } from "@/lib/errors";
 import { formatINR } from "@/lib/money";
 import { logger } from "@/lib/logger";
-import { sha256 } from "@/lib/crypto";
+import { hmacSha256Hex, sha256 } from "@/lib/crypto";
 import { assertTransition, ORDER_TRANSITIONS, PAYMENT_TRANSITIONS, canTransition } from "@/domain/state-machines";
 import type { ActorType, OrderStatus, PaymentStatus, StatusField } from "@/generated/prisma/enums";
 import { enqueueEmail } from "@/server/notifications/outbox";
@@ -33,8 +33,19 @@ export async function nextNumber(tx: Tx, key: string, prefix: string, pad = 6): 
   return `${prefix}${String(rows[0]!.value).padStart(pad, "0")}`;
 }
 
-export function orderLink(number: string, accessToken?: string) {
-  return accessToken ? `${appUrl()}/orders/${number}?t=${accessToken}` : `${appUrl()}/account/orders/${number}`;
+/**
+ * Per-order access token for guest links. Derived (HMAC under SESSION_SECRET)
+ * rather than random so every email can carry a working link and tokens never
+ * need rotating; only its SHA-256 is stored on the order.
+ */
+export function orderAccessToken(orderId: string): string {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) throw new Error("SESSION_SECRET is not configured");
+  return Buffer.from(hmacSha256Hex(secret, `order-access:${orderId}`), "hex").toString("base64url").slice(0, 32);
+}
+
+export function orderLink(order: { id: string; number: string }) {
+  return `${appUrl()}/orders/${order.number}?t=${orderAccessToken(order.id)}`;
 }
 
 function itemsSummary(items: { productName: string; colorName: string; size: string; quantity: number }[]) {
@@ -72,12 +83,6 @@ export async function finalizePaidOrder(args: { orderId: string; providerPayment
     const order = await lockOrder(tx, args.orderId);
     const payment = await tx.payment.findFirst({ where: { orderId: order.id, providerOrderId: args.providerOrderId } });
     if (!payment) throw new AppError("PAYMENT_MISMATCH", "Payment does not belong to this order", 400);
-    if (args.amount !== order.grandTotal) {
-      logger.error("payment.amount_mismatch", { orderId: order.id, expected: order.grandTotal, got: args.amount });
-      await tx.payment.update({ where: { id: payment.id }, data: { providerPaymentId: args.providerPaymentId, status: "CAPTURED", capturedAt: new Date(), amount: args.amount } });
-      await setStatuses(tx, order, { status: "ON_HOLD", paymentStatus: "PAID" }, args.actor, `Captured amount ${args.amount} differs from order total ${order.grandTotal}`);
-      return { alreadyFinal: false, onHold: true };
-    }
     if (order.paymentStatus === "PAID" || order.paymentStatus === "PARTIALLY_REFUNDED" || order.paymentStatus === "REFUNDED") {
       return { alreadyFinal: true, onHold: false };
     }
@@ -86,6 +91,15 @@ export async function finalizePaidOrder(args: { orderId: string; providerPayment
       await tx.payment.update({ where: { id: payment.id }, data: { providerPaymentId: args.providerPaymentId, status: "CAPTURED", capturedAt: new Date(), method: args.method ?? undefined } });
       await setStatuses(tx, order, { paymentStatus: "PAID" }, args.actor, "Payment captured after order was closed — refund required");
       await audit({ action: "payment.captured_on_closed_order", entityType: "Order", entityId: order.id, summary: "Refund required" }, tx);
+      return { alreadyFinal: false, onHold: true };
+    }
+    if (args.amount !== order.grandTotal) {
+      // Never ship against a payment that doesn't match the order: hold it and free the stock hold.
+      logger.error("payment.amount_mismatch", { orderId: order.id, expected: order.grandTotal, got: args.amount });
+      await tx.payment.update({ where: { id: payment.id }, data: { providerPaymentId: args.providerPaymentId, status: "CAPTURED", capturedAt: new Date(), amount: args.amount } });
+      await releaseReservations(tx, order.id, "RELEASED");
+      await setStatuses(tx, order, { status: "ON_HOLD", paymentStatus: "PAID" }, args.actor, `Captured amount ${args.amount} differs from order total ${order.grandTotal}`);
+      await audit({ action: "payment.amount_mismatch", entityType: "Order", entityId: order.id, after: { expected: order.grandTotal, captured: args.amount } }, tx);
       return { alreadyFinal: false, onHold: true };
     }
     await tx.payment.update({
@@ -109,7 +123,7 @@ export async function finalizePaidOrder(args: { orderId: string; providerPayment
       {
         template: "order_confirmation",
         to: order.email,
-        vars: { name: order.customerName, orderNumber: order.number, itemsSummary: itemsSummary(order.items), total: formatINR(order.grandTotal), link: orderLink(order.number) },
+        vars: { name: order.customerName, orderNumber: order.number, itemsSummary: itemsSummary(order.items), total: formatINR(order.grandTotal), link: orderLink(order) },
         dedupeKey: `order_confirmed:${order.id}`,
       },
       tx,
@@ -139,13 +153,17 @@ export async function markPaymentFailed(args: { orderId: string; providerOrderId
 }
 
 /** Release stock and coupons for orders whose payment window lapsed. Idempotent. */
-export async function expireOrder(orderId: string) {
+export async function expireOrder(orderId: string, note = "Payment window expired") {
   return db.$transaction(async (tx) => {
     const order = await lockOrder(tx, orderId);
-    if (order.status !== "PENDING_PAYMENT" && order.status !== "PAYMENT_FAILED") return false;
+    if (order.status !== "PENDING_PAYMENT" && order.status !== "PAYMENT_FAILED") {
+      // Safety net: an expired hold on a non-pending order must not pin stock forever.
+      await releaseReservations(tx, order.id, "EXPIRED");
+      return false;
+    }
     await releaseReservations(tx, order.id, "EXPIRED");
     await tx.couponRedemption.updateMany({ where: { orderId: order.id, status: "RESERVED" }, data: { status: "RELEASED" } });
-    await setStatuses(tx, order, { status: "EXPIRED" }, SYSTEM, "Payment window expired");
+    await setStatuses(tx, order, { status: "EXPIRED" }, SYSTEM, note);
     return true;
   });
 }
@@ -191,7 +209,7 @@ export async function cancelOrder(orderId: string, actor: Actor, reason: string)
     await tx.order.update({ where: { id: order.id }, data: { cancelledAt: new Date(), cancelReason: reason.slice(0, 300) } });
     if (order.confirmedAt) {
       await enqueueEmail(
-        { template: "order_cancelled", to: order.email, vars: { name: order.customerName, orderNumber: order.number, reason, link: orderLink(order.number) }, dedupeKey: `order_cancelled:${order.id}` },
+        { template: "order_cancelled", to: order.email, vars: { name: order.customerName, orderNumber: order.number, reason, link: orderLink(order) }, dedupeKey: `order_cancelled:${order.id}` },
         tx,
       );
     }

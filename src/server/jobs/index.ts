@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { expireStaleOrders } from "@/server/services/orders";
 import { reconcilePendingPayments } from "@/server/services/payments";
+import { reconcilePendingRefunds } from "@/server/services/refunds";
 import { syncTracking } from "@/server/services/fulfillment";
 import { processOutbox } from "@/server/notifications/outbox";
 import { cleanupBuckets } from "@/server/services/rate-limit";
@@ -25,6 +26,7 @@ export async function runJobs() {
   };
   // Reconcile before expiring so a late capture is applied, not released.
   await step("reconcilePayments", () => reconcilePendingPayments());
+  await step("reconcileRefunds", () => reconcilePendingRefunds());
   await step("expireOrders", () => expireStaleOrders());
   await step("outbox", () => processOutbox(50));
   await step("tracking", () => syncTracking());

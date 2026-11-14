@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox, FormMessage, Input } from "@/components/ui/form";
-import { forgotPasswordAction, loginAction, registerAction, resetPasswordAction, adminLoginAction } from "@/server/actions/auth";
+import { forgotPasswordAction, loginAction, registerAction, resetPasswordAction, adminLoginAction, confirmEmailAction } from "@/server/actions/auth";
 import type { ActionResult } from "@/server/api";
 
 type S = ActionResult<unknown> | null;
@@ -32,6 +32,7 @@ export function LoginForm({ next, staff }: { next?: string; staff?: boolean }) {
 
 export function RegisterForm({ next, email }: { next?: string; email?: string }) {
   const [state, action, pending] = useActionState<S, FormData>(registerAction, null);
+  if (state?.ok) return <FormMessage tone="success">{state.message}</FormMessage>;
   return (
     <form action={action} className="space-y-5" noValidate>
       <input type="hidden" name="next" value={next ?? ""} />
@@ -43,6 +44,17 @@ export function RegisterForm({ next, email }: { next?: string; email?: string })
       <Button type="submit" className="w-full" size="lg" loading={pending}>Create account</Button>
       <p className="text-center text-xs text-stone">By creating an account you agree to our <Link href="/pages/terms-of-service" className="underline">Terms</Link> and <Link href="/pages/privacy-policy" className="underline">Privacy Policy</Link>.</p>
       <p className="text-center text-sm">Already have an account? <Link href="/login" className="text-forest link-underline">Sign in</Link></p>
+    </form>
+  );
+}
+
+export function ConfirmEmailForm({ token }: { token: string }) {
+  const [state, action, pending] = useActionState<S, FormData>(confirmEmailAction, null);
+  return (
+    <form action={action} className="space-y-5">
+      <input type="hidden" name="token" value={token} />
+      {formErr(state) && <FormMessage>{formErr(state)}</FormMessage>}
+      <Button type="submit" className="w-full" size="lg" loading={pending}>Confirm email &amp; sign in</Button>
     </form>
   );
 }

@@ -2,7 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { db, type Tx } from "@/lib/db";
 import { AppError } from "@/lib/errors";
-import { randomToken, sha256 } from "@/lib/crypto";
+import { sha256 } from "@/lib/crypto";
 import { logger } from "@/lib/logger";
 import { addressSchema, emailSchema, indianMobileSchema } from "@/lib/validation";
 import { formatINR } from "@/lib/money";
@@ -15,8 +15,8 @@ import { buildCartView, currentCartRow } from "./cart";
 import { evaluateCoupon } from "./coupons";
 import { getSettings } from "./settings";
 import { commitOrderStock, reserve } from "./inventory";
-import { nextNumber, orderLink, recordHistory } from "./orders";
-import { ensureGatewayOrder } from "./payments";
+import { expireOrder, nextNumber, orderAccessToken, orderLink, recordHistory } from "./orders";
+import { ensureGatewayOrder, reconcileOrderPayments } from "./payments";
 import { enforce } from "./rate-limit";
 
 export const checkoutSchema = z.object({
@@ -82,10 +82,7 @@ export async function placeOrder(input: CheckoutInput, ctx: { ip: string }): Pro
   const dup = await db.order.findUnique({ where: { idempotencyKey: data.idempotencyKey } });
   if (dup) {
     if (dup.email !== data.email) throw new AppError("IDEMPOTENCY_CONFLICT", "This checkout session was already used. Please reload the page.", 409);
-    // Access token isn't stored in plain text; a fresh one is issued for the same order.
-    const token = randomToken(24);
-    await db.order.update({ where: { id: dup.id }, data: { accessTokenHash: sha256(token) } });
-    return existingResult(dup.id, token);
+    return existingResult(dup.id, orderAccessToken(dup.id));
   }
 
   const settings = await getSettings();
@@ -111,7 +108,7 @@ export async function placeOrder(input: CheckoutInput, ctx: { ip: string }): Pro
     throw new AppError("TOTAL_CHANGED", `Your order total has changed to ${formatINR(view.pricing.grandTotal)}. Please review before paying.`, 409, { total: view.pricing.grandTotal });
   }
 
-  const accessToken = randomToken(24);
+  let accessToken = "";
   const settingsTtl = Number(process.env.RESERVATION_TTL_MINUTES ?? 30);
   const lineByItem = new Map(view.items.map((i) => [i.id, i]));
   const taxByKey = new Map(view.pricing.lines.map((l) => [l.key, l]));
@@ -144,7 +141,7 @@ export async function placeOrder(input: CheckoutInput, ctx: { ip: string }): Pro
             taxBreakdown: { ...view.pricing.tax, sellerState: settings.store.sellerState || null, shipToState: data.address.state, gstin: settings.store.gstin || null } as Prisma.InputJsonValue,
             idempotencyKey: data.idempotencyKey,
             cartId: cartRow.id,
-            accessTokenHash: sha256(accessToken),
+            accessTokenHash: "pending",
             termsAcceptedAt: new Date(),
             marketingOptIn: data.marketingOptIn,
             customerNote: data.customerNote,
@@ -176,6 +173,8 @@ export async function placeOrder(input: CheckoutInput, ctx: { ip: string }): Pro
             },
           },
         });
+        accessToken = orderAccessToken(order.id);
+        await tx.order.update({ where: { id: order.id }, data: { accessTokenHash: sha256(accessToken) } });
         await recordHistory(tx, order.id, "ORDER", null, order.status, { type: "CUSTOMER", id: customerUserId }, isCod ? "Cash on Delivery order placed" : "Order created, awaiting payment");
 
         // Re-validate the coupon under a row lock so usage limits hold under concurrency.
@@ -201,7 +200,7 @@ export async function placeOrder(input: CheckoutInput, ctx: { ip: string }): Pro
             {
               template: "cod_order_placed",
               to: data.email,
-              vars: { name: data.address.fullName, orderNumber: number, itemsSummary: view.items.map((i) => `• ${i.productName} — ${i.colorName} / ${i.size} × ${i.quantity}`).join("\n"), total: formatINR(order.grandTotal), link: orderLink(number, accessToken) },
+              vars: { name: data.address.fullName, orderNumber: number, itemsSummary: view.items.map((i) => `• ${i.productName} — ${i.colorName} / ${i.size} × ${i.quantity}`).join("\n"), total: formatINR(order.grandTotal), link: orderLink({ id: order.id, number }) },
               dedupeKey: `cod_placed:${order.id}`,
             },
             tx,
@@ -228,7 +227,7 @@ export async function placeOrder(input: CheckoutInput, ctx: { ip: string }): Pro
     if ((e as { code?: string }).code === "P2002") {
       // Concurrent duplicate submit with the same idempotency key.
       const again = await db.order.findUnique({ where: { idempotencyKey: data.idempotencyKey } });
-      if (again) return existingResult(again.id, null);
+      if (again) return existingResult(again.id, orderAccessToken(again.id));
     }
     throw e;
   }
@@ -245,6 +244,25 @@ export async function placeOrder(input: CheckoutInput, ctx: { ip: string }): Pro
     // Keep the reservation until expiry so the customer can retry immediately.
     throw new AppError("GATEWAY_UNAVAILABLE", "We couldn't reach the payment provider. Your items are held for a few minutes — please try again.", 503);
   }
+}
+
+/**
+ * The shopper changed their details or payment method after a failed/abandoned
+ * online payment: confirm with the gateway that the order really is unpaid,
+ * then release it so a fresh order can be placed. If it was paid after all,
+ * report that instead so no second order is created.
+ */
+export async function replaceUnpaidOrder(orderNumber: string, accessToken: string | null, userId: string | null): Promise<{ status: "released" | "paid"; orderNumber: string }> {
+  const order = await db.order.findUnique({ where: { number: orderNumber } });
+  const allowed = order && ((userId && order.userId === userId) || (accessToken && order.accessTokenHash === sha256(accessToken)));
+  if (!order || !allowed) throw new AppError("NOT_FOUND", "Order not found", 404);
+  if (order.paymentMethod === "ONLINE" && ["PENDING_PAYMENT", "PAYMENT_FAILED"].includes(order.status)) {
+    await reconcileOrderPayments(order.id);
+  }
+  const fresh = await db.order.findUniqueOrThrow({ where: { id: order.id } });
+  if (["PAID", "PARTIALLY_REFUNDED", "REFUNDED"].includes(fresh.paymentStatus)) return { status: "paid", orderNumber };
+  if (["PENDING_PAYMENT", "PAYMENT_FAILED"].includes(fresh.status)) await expireOrder(fresh.id, "Replaced by a new checkout");
+  return { status: "released", orderNumber };
 }
 
 /** Retry payment for an order still awaiting payment (same reservation). */

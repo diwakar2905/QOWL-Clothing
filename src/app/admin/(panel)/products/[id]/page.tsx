@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getCurrentUser, hasPermission, requirePermission } from "@/server/auth/session";
-import { publishBlockers } from "@/server/actions/admin/catalog";
+import { publishBlockers } from "@/server/services/catalog-admin";
 import { PageHeader, Card, Status } from "@/components/admin/ui";
 import { ProductForm } from "@/components/admin/product-form";
 import { StatusPanel, VariantsPanel, ImagesPanel } from "@/components/admin/product-panels";

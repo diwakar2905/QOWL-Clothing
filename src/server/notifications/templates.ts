@@ -9,6 +9,11 @@ export const DEFAULT_TEMPLATES: Record<string, { name: string; subject: string; 
     subject: "Verify your QOWL account",
     body: "Hi {{name}},\n\nConfirm your email address to finish setting up your QOWL account:\n\n{{link}}\n\nThis link expires in 24 hours. If you didn't create an account, you can ignore this email.",
   },
+  account_exists: {
+    name: "Sign-up attempt for an existing account",
+    subject: "You already have a QOWL account",
+    body: "Hi {{name}},\n\nSomeone (hopefully you) tried to create a QOWL account with this email address, but you already have one.\n\nSign in: {{loginLink}}\nForgot your password? Reset it here: {{resetLink}}\n\nIf this wasn't you, you can ignore this email — your account hasn't changed.",
+  },
   password_reset: {
     name: "Password reset",
     subject: "Reset your QOWL password",

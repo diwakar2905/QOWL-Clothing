@@ -1,25 +1,23 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { ButtonLink } from "@/components/ui/button";
-import { verifyEmail } from "@/server/services/auth";
+import { ConfirmEmailForm } from "@/components/auth/forms";
 
-export const metadata: Metadata = { title: "Verify email", robots: { index: false } };
+export const metadata: Metadata = { title: "Confirm your email", robots: { index: false } };
 
+/**
+ * The emailed link only opens this page; the token is consumed by the button
+ * (a POST), so mail scanners that prefetch links can't use it up.
+ */
 export default async function VerifyPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token } = await searchParams;
-  let ok = false;
-  let message = "This verification link is invalid or has expired.";
-  if (token) {
-    try {
-      await verifyEmail(token);
-      ok = true;
-    } catch (e) {
-      message = (e as Error).message;
-    }
-  }
   return (
-    <AuthShell title={ok ? "Email verified" : "Link expired"} subtitle={ok ? "Thanks — your email address is confirmed." : message}>
-      <div className="flex justify-center"><ButtonLink href="/account">Go to your account</ButtonLink></div>
+    <AuthShell title="Confirm your email" subtitle="One more step to finish setting up your QOWL account.">
+      {token ? (
+        <ConfirmEmailForm token={token.slice(0, 100)} />
+      ) : (
+        <p className="text-center text-sm">This link is incomplete. <Link href="/login" className="text-forest underline">Sign in</Link> to request a new one.</p>
+      )}
     </AuthShell>
   );
 }

@@ -195,7 +195,7 @@ export async function adjustStock(
   return txIn ? run(txIn) : db.$transaction(run);
 }
 
-async function logMovement(
+export async function logMovement(
   tx: Tx,
   m: { variantId: string; type: InventoryMovementType; onHandDelta?: number; committedDelta?: number; damagedDelta?: number; returnedDelta?: number; orderId?: string; returnId?: string; actorId?: string; reason?: string; note?: string },
 ) {

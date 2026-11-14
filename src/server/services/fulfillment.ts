@@ -141,7 +141,7 @@ async function applyStatus(
 ) {
   const orderData: Prisma.OrderUpdateInput = { fulfillmentStatus: to };
   const shipData: Prisma.ShipmentUpdateInput = { status: to };
-  const link = orderLink(order.number);
+  const link = orderLink(order);
   const shipment = await tx.shipment.findUniqueOrThrow({ where: { id: shipmentId } });
   const vars = { name: order.customerName, orderNumber: order.number, courier: shipment.courierName ?? "our courier partner", awb: shipment.awb ?? "—", link };
   if (to === "SHIPPED") {
