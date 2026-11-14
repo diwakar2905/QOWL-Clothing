@@ -1,0 +1,524 @@
+▲ Next.js 16.4.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.0.2.2:3000
+- Environments: .env
+✓ Ready in 349ms
+✓ Running next.config.ts took 34ms
+- Experiments (use with caution):
+  · serverActions
+
+ GET /api/health 200 in 746ms (next.js: 352ms, proxy.ts: 91ms, application-code: 303ms)
+ GET /products/origin 200 in 1549ms (next.js: 783ms, application-code: 766ms)
+✓ Compiled in 40ms
+ GET /products/origin 200 in 476ms (next.js: 41ms, application-code: 435ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 278ms (next.js: 0.9ms, application-code: 277ms)
+✓ Compiled in 9ms
+ GET /products/origin 200 in 287ms (next.js: 1.0ms, application-code: 286ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 235ms (next.js: 25ms, application-code: 211ms)
+✓ Compiled in 6ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 267ms (next.js: 5ms, application-code: 262ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 187ms (next.js: 1.1ms, application-code: 186ms)
+✓ Compiled in 2ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 281ms (next.js: 27ms, application-code: 255ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 217ms (next.js: 0.9ms, application-code: 216ms)
+✓ Compiled in 2ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 231ms (next.js: 27ms, application-code: 204ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 281ms (next.js: 1.1ms, application-code: 280ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 251ms (next.js: 38ms, application-code: 213ms)
+✓ Compiled in 7ms
+ GET /products/origin 200 in 253ms (next.js: 0.6ms, application-code: 252ms)
+✓ Compiled in 10ms
+ GET /products/origin 200 in 170ms (next.js: 0.7ms, application-code: 169ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 250ms (next.js: 26ms, application-code: 224ms)
+✓ Compiled in 6ms
+ GET /products/origin 200 in 210ms (next.js: 0.8ms, application-code: 209ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 187ms (next.js: 1.8ms, application-code: 185ms)
+✓ Compiled in 2ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 222ms (next.js: 31ms, application-code: 191ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 200ms (next.js: 0.7ms, application-code: 199ms)
+✓ Compiled in 6ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 199ms (next.js: 1.0ms, application-code: 198ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 262ms (next.js: 27ms, application-code: 235ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 194ms (next.js: 0.7ms, application-code: 193ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 222ms (next.js: 27ms, application-code: 195ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 205ms (next.js: 1.1ms, application-code: 204ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 171ms (next.js: 0.7ms, application-code: 170ms)
+✓ Compiled in 6ms
+ GET /products/origin 200 in 252ms (next.js: 29ms, application-code: 224ms)
+✓ Compiled in 13ms
+ GET /products/origin 200 in 218ms (next.js: 1.1ms, application-code: 216ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 162ms (next.js: 3ms, application-code: 159ms)
+✓ Compiled in 10ms
+ GET /products/origin 200 in 327ms (next.js: 36ms, application-code: 291ms)
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+✓ Compiled in 10ms
+ GET /products/origin 200 in 229ms (next.js: 2ms, application-code: 226ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 251ms (next.js: 28ms, application-code: 224ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 198ms (next.js: 0.7ms, application-code: 197ms)
+✓ Compiled in 5ms
+ GET /products/origin 200 in 241ms (next.js: 27ms, application-code: 214ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 199ms (next.js: 0.7ms, application-code: 199ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 170ms (next.js: 0.7ms, application-code: 169ms)
+✓ Compiled in 5ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 209ms (next.js: 35ms, application-code: 174ms)
+✓ Compiled in 6ms
+ GET /products/origin 200 in 193ms (next.js: 0.7ms, application-code: 193ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 175ms (next.js: 0.8ms, application-code: 175ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 221ms (next.js: 32ms, application-code: 189ms)
+✓ Compiled in 5ms
+ GET /products/origin 200 in 184ms (next.js: 0.6ms, application-code: 183ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 175ms (next.js: 0.8ms, application-code: 174ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 215ms (next.js: 34ms, application-code: 181ms)
+✓ Compiled in 10ms
+ GET /products/origin 200 in 169ms (next.js: 0.6ms, application-code: 168ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 219ms (next.js: 28ms, application-code: 192ms)
+✓ Compiled in 7ms
+ GET /products/origin 200 in 213ms (next.js: 1.0ms, application-code: 212ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 185ms (next.js: 1.0ms, application-code: 184ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 232ms (next.js: 29ms, application-code: 203ms)
+✓ Compiled in 6ms
+ GET /products/origin 200 in 192ms (next.js: 0.7ms, application-code: 191ms)
+✓ Compiled in 7ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 199ms (next.js: 0.8ms, application-code: 198ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 251ms (next.js: 32ms, application-code: 218ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 239ms (next.js: 1.0ms, application-code: 238ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 254ms (next.js: 26ms, application-code: 228ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 175ms (next.js: 1.0ms, application-code: 174ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 181ms (next.js: 0.6ms, application-code: 181ms)
+✓ Compiled in 2ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 194ms (next.js: 26ms, application-code: 168ms)
+✓ Compiled in 5ms
+ GET /products/origin 200 in 211ms (next.js: 1.1ms, application-code: 209ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 179ms (next.js: 0.6ms, application-code: 178ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 214ms (next.js: 29ms, application-code: 185ms)
+✓ Compiled in 6ms
+ GET /products/origin 200 in 204ms (next.js: 0.7ms, application-code: 204ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 174ms (next.js: 0.8ms, application-code: 173ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 236ms (next.js: 27ms, application-code: 209ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 194ms (next.js: 1.0ms, application-code: 193ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 176ms (next.js: 0.6ms, application-code: 176ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 215ms (next.js: 34ms, application-code: 180ms)
+✓ Compiled in 10ms
+ GET /products/origin 200 in 191ms (next.js: 0.7ms, application-code: 190ms)
+✓ Compiled in 7ms
+ GET /products/origin 200 in 183ms (next.js: 0.7ms, application-code: 182ms)
+✓ Compiled in 2ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 198ms (next.js: 27ms, application-code: 170ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 213ms (next.js: 1.1ms, application-code: 212ms)
+✓ Compiled in 1ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 255ms (next.js: 27ms, application-code: 227ms)
+✓ Compiled in 10ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 220ms (next.js: 0.8ms, application-code: 219ms)
+✓ Compiled in 5ms
+ GET /products/origin 200 in 196ms (next.js: 0.8ms, application-code: 195ms)
+✓ Compiled in 6ms
+ GET /products/origin 200 in 235ms (next.js: 31ms, application-code: 204ms)
+✓ Compiled in 7ms
+ GET /products/origin 200 in 169ms (next.js: 0.8ms, application-code: 168ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 210ms (next.js: 0.7ms, application-code: 209ms)
+✓ Compiled in 2ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 294ms (next.js: 34ms, application-code: 260ms)
+✓ Compiled in 5ms
+ GET /products/origin 200 in 194ms (next.js: 0.7ms, application-code: 193ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 249ms (next.js: 38ms, application-code: 211ms)
+✓ Compiled in 11ms
+ GET /products/origin 200 in 214ms (next.js: 1.8ms, application-code: 212ms)
+✓ Compiled in 14ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 224ms (next.js: 39ms, application-code: 186ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 214ms (next.js: 1.6ms, application-code: 213ms)
+✓ Compiled in 5ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 214ms (next.js: 0.6ms, application-code: 214ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 209ms (next.js: 30ms, application-code: 180ms)
+✓ Compiled in 5ms
+ GET /products/origin 200 in 190ms (next.js: 0.7ms, application-code: 190ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 163ms (next.js: 0.7ms, application-code: 162ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 221ms (next.js: 30ms, application-code: 191ms)
+✓ Compiled in 9ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 252ms (next.js: 0.7ms, application-code: 251ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 230ms (next.js: 28ms, application-code: 202ms)
+ GET /products/origin 200 in 185ms (next.js: 21ms, application-code: 164ms)
+✓ Compiled in 8ms
+ GET /products/origin 200 in 165ms (next.js: 0.8ms, application-code: 164ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 226ms (next.js: 23ms, application-code: 203ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 194ms (next.js: 6ms, application-code: 187ms)
+✓ Compiled in 5ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 231ms (next.js: 21ms, application-code: 210ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 180ms (next.js: 0.7ms, application-code: 179ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 166ms (next.js: 0.6ms, application-code: 166ms)
+✓ Compiled in 6ms
+ GET /products/origin 200 in 206ms (next.js: 25ms, application-code: 182ms)
+✓ Compiled in 5ms
+ GET /products/origin 200 in 175ms (next.js: 0.8ms, application-code: 174ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 177ms (next.js: 0.7ms, application-code: 177ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 280ms (next.js: 22ms, application-code: 257ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 65ms (next.js: 0.8ms, application-code: 64ms)
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 194ms (next.js: 0.7ms, application-code: 194ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 207ms (next.js: 30ms, application-code: 177ms)
+✓ Compiled in 6ms
+ GET /products/origin 200 in 170ms (next.js: 0.8ms, application-code: 169ms)
+✓ Compiled in 2ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 199ms (next.js: 21ms, application-code: 179ms)
+✓ Compiled in 11ms
+ GET /products/origin 200 in 172ms (next.js: 0.7ms, application-code: 171ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 219ms (next.js: 20ms, application-code: 200ms)
+✓ Compiled in 6ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 167ms (next.js: 0.7ms, application-code: 166ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 189ms (next.js: 2ms, application-code: 187ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 192ms (next.js: 21ms, application-code: 171ms)
+✓ Compiled in 12ms
+ GET /products/origin 200 in 168ms (next.js: 1.4ms, application-code: 166ms)
+✓ Compiled in 5ms
+ GET /products/origin 200 in 156ms (next.js: 0.8ms, application-code: 156ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 201ms (next.js: 20ms, application-code: 180ms)
+✓ Compiled in 8ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 220ms (next.js: 1.0ms, application-code: 219ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 243ms (next.js: 21ms, application-code: 221ms)
+✓ Compiled in 6ms
+ GET /products/origin 200 in 163ms (next.js: 0.6ms, application-code: 162ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 199ms (next.js: 22ms, application-code: 177ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 168ms (next.js: 0.6ms, application-code: 168ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 169ms (next.js: 0.6ms, application-code: 168ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 187ms (next.js: 21ms, application-code: 166ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 185ms (next.js: 0.6ms, application-code: 184ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 157ms (next.js: 0.7ms, application-code: 156ms)
+✓ Compiled in 1ms
+ GET /products/origin 200 in 261ms (next.js: 25ms, application-code: 236ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 196ms (next.js: 0.6ms, application-code: 196ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 222ms (next.js: 22ms, application-code: 200ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 255ms (next.js: 1.5ms, application-code: 254ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 208ms (next.js: 23ms, application-code: 185ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 189ms (next.js: 0.7ms, application-code: 188ms)
+✓ Compiled in 11ms
+ GET /products/origin 200 in 150ms (next.js: 0.8ms, application-code: 149ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 188ms (next.js: 21ms, application-code: 167ms)
+✓ Compiled in 5ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 175ms (next.js: 0.7ms, application-code: 174ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 192ms (next.js: 2ms, application-code: 190ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 216ms (next.js: 22ms, application-code: 194ms)
+✓ Compiled in 6ms
+ GET /products/origin 200 in 179ms (next.js: 0.8ms, application-code: 178ms)
+✓ Compiled in 5ms
+ GET /products/origin 200 in 184ms (next.js: 0.7ms, application-code: 184ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 212ms (next.js: 24ms, application-code: 188ms)
+✓ Compiled in 5ms
+ GET /products/origin 200 in 163ms (next.js: 1.0ms, application-code: 162ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 163ms (next.js: 0.7ms, application-code: 163ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 195ms (next.js: 21ms, application-code: 174ms)
+✓ Compiled in 5ms
+ GET /products/origin 200 in 188ms (next.js: 0.7ms, application-code: 187ms)
+✓ Compiled in 12ms
+ GET /products/origin 200 in 153ms (next.js: 0.7ms, application-code: 152ms)
+✓ Compiled in 6ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 247ms (next.js: 25ms, application-code: 221ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 191ms (next.js: 1.1ms, application-code: 190ms)
+✓ Compiled in 5ms
+ GET /products/origin 200 in 234ms (next.js: 28ms, application-code: 206ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 216ms (next.js: 0.6ms, application-code: 215ms)
+✓ Compiled in 7ms
+ GET /products/origin 200 in 147ms (next.js: 0.8ms, application-code: 146ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 976ms (next.js: 28ms, application-code: 948ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 229ms (next.js: 24ms, application-code: 205ms)
+✓ Compiled in 10ms
+ GET /products/origin 200 in 202ms (next.js: 0.9ms, application-code: 202ms)
+✓ Compiled in 6ms
+ GET /products/origin 200 in 190ms (next.js: 0.6ms, application-code: 189ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 229ms (next.js: 25ms, application-code: 204ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 195ms (next.js: 0.7ms, application-code: 194ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 234ms (next.js: 23ms, application-code: 212ms)
+✓ Compiled in 6ms
+ GET /products/origin 200 in 192ms (next.js: 0.7ms, application-code: 191ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 246ms (next.js: 31ms, application-code: 215ms)
+✓ Compiled in 1ms
+ GET /products/origin 200 in 217ms (next.js: 0.7ms, application-code: 216ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 218ms (next.js: 28ms, application-code: 190ms)
+✓ Compiled in 5ms
+ GET /products/origin 200 in 174ms (next.js: 0.7ms, application-code: 173ms)
+✓ Compiled in 5ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 221ms (next.js: 0.6ms, application-code: 221ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 223ms (next.js: 23ms, application-code: 200ms)
+✓ Compiled in 7ms
+ GET /products/origin 200 in 198ms (next.js: 0.8ms, application-code: 197ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 217ms (next.js: 25ms, application-code: 193ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 178ms (next.js: 0.7ms, application-code: 177ms)
+✓ Compiled in 8ms
+ GET /products/origin 200 in 177ms (next.js: 0.7ms, application-code: 176ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 249ms (next.js: 30ms, application-code: 219ms)
+✓ Compiled in 15ms
+ GET /products/origin 200 in 196ms (next.js: 0.7ms, application-code: 196ms)
+✓ Compiled in 5ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 207ms (next.js: 22ms, application-code: 184ms)
+✓ Compiled in 7ms
+ GET /products/origin 200 in 202ms (next.js: 0.7ms, application-code: 202ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 206ms (next.js: 24ms, application-code: 181ms)
+✓ Compiled in 5ms
+ GET /products/origin 200 in 217ms (next.js: 0.9ms, application-code: 217ms)
+✓ Compiled in 8ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 166ms (next.js: 0.7ms, application-code: 165ms)
+✓ Compiled in 9ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 246ms (next.js: 30ms, application-code: 216ms)
+✓ Compiled in 11ms
+ GET /products/origin 200 in 220ms (next.js: 0.7ms, application-code: 220ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 204ms (next.js: 23ms, application-code: 181ms)
+✓ Compiled in 11ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 188ms (next.js: 0.7ms, application-code: 187ms)
+✓ Compiled in 5ms
+ GET /products/origin 200 in 166ms (next.js: 0.6ms, application-code: 166ms)
+✓ Compiled in 7ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 239ms (next.js: 27ms, application-code: 212ms)
+✓ Compiled in 7ms
+ GET /products/origin 200 in 204ms (next.js: 0.7ms, application-code: 204ms)
+✓ Compiled in 3ms
+ GET /products/origin 200 in 214ms (next.js: 0.7ms, application-code: 213ms)
+✓ Compiled in 3ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 225ms (next.js: 25ms, application-code: 201ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 193ms (next.js: 1.0ms, application-code: 192ms)
+✓ Compiled in 5ms
+ GET /products/origin 200 in 215ms (next.js: 28ms, application-code: 187ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 197ms (next.js: 0.7ms, application-code: 196ms)
+✓ Compiled in 6ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 174ms (next.js: 0.7ms, application-code: 173ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 203ms (next.js: 23ms, application-code: 180ms)
+✓ Compiled in 8ms
+ GET /products/origin 200 in 216ms (next.js: 0.7ms, application-code: 215ms)
+✓ Compiled in 4ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 234ms (next.js: 32ms, application-code: 202ms)
+✓ Compiled in 4ms
+ GET /products/origin 200 in 201ms (next.js: 0.8ms, application-code: 200ms)
+✓ Compiled in 5ms
+[browser] Image with src "/concept/origin-front.webp" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /products/origin 200 in 216ms (next.js: 23ms, application-code: 193ms)
+✓ Compiled in 7ms
+ GET /products/origin 200 in 186ms (next.js: 0.7ms, application-code: 185ms)
+✓ Compiled in 10ms
+ GET /products/origin 200 in 166ms (next.js: 0.7ms, application-code: 165ms)
+✓ Compiled in 2ms
+ GET /products/origin 200 in 204ms (next.js: 31ms, application-code: 173ms)
+[?25h
