@@ -1,5 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "prisma migrate deploy && next build",
-  "crons": [{ "path": "/api/cron/jobs", "schedule": "0 3 * * *" }]
+  "buildCommand": "prisma migrate deploy && if [ \"$SEED_ON_DEPLOY\" = \"true\" ]; then tsx prisma/seed.ts && if [ -n \"$ADMIN_EMAIL\" ]; then tsx scripts/create-admin.ts; fi; fi && next build",
+  "crons": [
+    {
+      "path": "/api/cron/jobs",
+      "schedule": "0 3 * * *"
+    }
+  ]
 }
