@@ -34,7 +34,7 @@ export default async function CustomerAdmin({ params }: { params: Promise<{ id: 
           {hasPermission(user, "customers.update") && (
             <Card title="Account">
               <CustomerForm id={c.id} status={c.status === "DELETED" ? "ACTIVE" : c.status} notes={c.supportNotes ?? ""} />
-              {c.status === "DELETION_REQUESTED" && <div className="mt-4 border-t hairline pt-4"><p className="mb-2 text-xs text-stone">Deletion requested {c.deletionRequestedAt && formatDate(c.deletionRequestedAt)}. Anonymising removes profile, addresses, wishlist and bag; orders are retained without identity.</p><ActionButton variant="danger" confirm="Permanently anonymise this account?" action={() => anonymiseCustomerAction(c.id)}>Anonymise account</ActionButton></div>}
+              {c.status === "DELETION_REQUESTED" && <div className="mt-4 border-t hairline pt-4"><p className="mb-2 text-xs text-stone">Deletion requested {c.deletionRequestedAt && formatDate(c.deletionRequestedAt)}. Anonymising removes profile, addresses, wishlist and bag; orders are retained without identity.</p><ActionButton variant="danger" confirm="Permanently anonymise this account?" action={anonymiseCustomerAction.bind(null, c.id)}>Anonymise account</ActionButton></div>}
             </Card>
           )}
         </div>

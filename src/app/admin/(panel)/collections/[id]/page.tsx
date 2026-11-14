@@ -19,9 +19,9 @@ export default async function CollectionAdmin({ params }: { params: Promise<{ id
   return (
     <>
       <PageHeader title={c.title} back={{ href: "/admin/collections", label: "Collections" }} description={<Status value={c.status} />} actions={hasPermission(user, "catalog.publish") ? <>
-        {c.status !== "ACTIVE" && <ActionButton variant="primary" action={() => setCollectionStatusAction(c.id, "ACTIVE")}>Publish</ActionButton>}
-        {c.status === "ACTIVE" && <ActionButton action={() => setCollectionStatusAction(c.id, "DRAFT")}>Unpublish</ActionButton>}
-        {c.status !== "ARCHIVED" && <ActionButton variant="danger" confirm="Archive this collection?" action={() => setCollectionStatusAction(c.id, "ARCHIVED")}>Archive</ActionButton>}
+        {c.status !== "ACTIVE" && <ActionButton variant="primary" action={setCollectionStatusAction.bind(null, c.id, "ACTIVE")}>Publish</ActionButton>}
+        {c.status === "ACTIVE" && <ActionButton action={setCollectionStatusAction.bind(null, c.id, "DRAFT")}>Unpublish</ActionButton>}
+        {c.status !== "ARCHIVED" && <ActionButton variant="danger" confirm="Archive this collection?" action={setCollectionStatusAction.bind(null, c.id, "ARCHIVED")}>Archive</ActionButton>}
       </> : null} />
       <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
         <Card title="Details"><CollectionForm categories={cats} data={{ id: c.id, title: c.title, slug: c.slug, eyebrow: c.eyebrow ?? "", description: c.description ?? "", heroImageUrl: c.heroImageUrl ?? "", mobileImageUrl: c.mobileImageUrl ?? "", imageAlt: c.imageAlt ?? "", type: c.type, linkType: c.linkType, editorialHref: c.editorialHref ?? "", ruleCategories: (rules.categorySlugs ?? []).join(", "), ruleTags: (rules.tags ?? []).join(", "), sortOrder: String(c.sortOrder), showInExplore: c.showInExplore, seoTitle: c.seoTitle ?? "", seoDescription: c.seoDescription ?? "" }} /></Card>

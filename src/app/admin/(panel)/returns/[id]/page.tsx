@@ -44,7 +44,7 @@ export default async function ReturnAdmin({ params }: { params: Promise<{ id: st
           {r.status === "RECEIVED" && can("returns.inspect") && <Card title="Inspection"><InspectForm returnId={r.id} items={r.items.map((i) => ({ id: i.id, label: `${i.orderItem.productName} ${i.orderItem.colorName}/${i.orderItem.size}`, quantity: i.quantity }))} /></Card>}
           {r.type === "RETURN" && ["INSPECTED", "REFUND_PENDING"].includes(r.status) && can("orders.refund") && <Card title="Refund"><p className="mb-3 text-sm text-stone">Suggested: {formatINR(suggested)} (amount paid for the returned units, after discounts).</p><RefundReturnForm returnId={r.id} suggested={paiseToRupeesString(suggested)} cod={r.order.paymentMethod === "COD"} /></Card>}
           {r.type === "EXCHANGE" && r.status === "INSPECTED" && can("orders.fulfill") && <Card title="Ship replacement"><ShipExchangeForm returnId={r.id} /></Card>}
-          {["REFUND_PENDING", "EXCHANGE_SHIPPED", "INSPECTED"].includes(r.status) && can("returns.manage") && <ActionButton action={() => completeReturnAction(r.id)}>Mark completed</ActionButton>}
+          {["REFUND_PENDING", "EXCHANGE_SHIPPED", "INSPECTED"].includes(r.status) && can("returns.manage") && <ActionButton action={completeReturnAction.bind(null, r.id)}>Mark completed</ActionButton>}
         </div>
         <div className="space-y-6">
           <Card title="Timeline"><ul className="space-y-1 text-sm"><li>Requested {formatDateTime(r.createdAt)}</li>{r.pickupScheduledAt && <li>Pickup {formatDateTime(r.pickupScheduledAt)}</li>}{r.receivedAt && <li>Received {formatDateTime(r.receivedAt)}</li>}{r.inspectedAt && <li>Inspected {formatDateTime(r.inspectedAt)}</li>}</ul></Card>

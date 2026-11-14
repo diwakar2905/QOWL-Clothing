@@ -39,7 +39,7 @@ export default async function Discounts({ searchParams }: { searchParams: Promis
             <Td className="text-xs">{x.startsAt ? formatDate(x.startsAt) : "now"} → {x.endsAt ? formatDate(x.endsAt) : "no end"}</Td>
             <Td>{x._count.redemptions}{x.usageLimit != null && ` / ${x.usageLimit}`}</Td>
             <Td><Status value={x.isActive ? "ACTIVE" : "ARCHIVED"} /></Td>
-            <Td className="whitespace-nowrap"><a href={`/admin/discounts?edit=${x.id}`} className="label mr-3 text-forest">Edit</a><ActionButton size="sm" variant="ghost" action={() => toggleCouponAction(x.id, !x.isActive)}>{x.isActive ? "Deactivate" : "Activate"}</ActionButton></Td>
+            <Td className="whitespace-nowrap"><a href={`/admin/discounts?edit=${x.id}`} className="label mr-3 text-forest">Edit</a><ActionButton size="sm" variant="ghost" action={toggleCouponAction.bind(null, x.id, !x.isActive)}>{x.isActive ? "Deactivate" : "Activate"}</ActionButton></Td>
           </tr>
         ))}
       </Table>

@@ -45,11 +45,11 @@ export default async function OrderAdmin({ params }: { params: Promise<{ id: str
         <div className="space-y-6">
           <Card title="Actions">
             <div className="flex flex-wrap gap-2">
-              {o.status === "ON_HOLD" && can("orders.update") && <ActionButton variant="primary" action={() => releaseHoldAction(o.id)}>Release hold (commit stock)</ActionButton>}
-              {o.status === "CANCELLATION_REQUESTED" && can("orders.update") && <ActionButton action={() => orderStatusAction(o.id, "PROCESSING", "Cancellation declined")}>Decline cancellation</ActionButton>}
-              {fulfillable && can("orders.fulfill") && o.fulfillmentStatus === "UNFULFILLED" && <ActionButton action={() => packingAction(o.id, "PACKED")}>Mark packed</ActionButton>}
+              {o.status === "ON_HOLD" && can("orders.update") && <ActionButton variant="primary" action={releaseHoldAction.bind(null, o.id)}>Release hold (commit stock)</ActionButton>}
+              {o.status === "CANCELLATION_REQUESTED" && can("orders.update") && <ActionButton action={orderStatusAction.bind(null, o.id, "PROCESSING", "Cancellation declined")}>Decline cancellation</ActionButton>}
+              {fulfillable && can("orders.fulfill") && o.fulfillmentStatus === "UNFULFILLED" && <ActionButton action={packingAction.bind(null, o.id, "PACKED")}>Mark packed</ActionButton>}
               {fulfillable && can("orders.fulfill") && !activeShipment && ["UNFULFILLED", "PACKED"].includes(o.fulfillmentStatus) && <CreateShipment orderId={o.id} automation={!!provider.createShipment} />}
-              {["PENDING_PAYMENT", "PAYMENT_FAILED", "EXPIRED"].includes(o.status) && o.paymentMethod === "ONLINE" && can("orders.update") && <ActionButton action={() => reconcileOrderAction(o.id)}>Check payment with gateway</ActionButton>}
+              {["PENDING_PAYMENT", "PAYMENT_FAILED", "EXPIRED"].includes(o.status) && o.paymentMethod === "ONLINE" && can("orders.update") && <ActionButton action={reconcileOrderAction.bind(null, o.id)}>Check payment with gateway</ActionButton>}
               {can("orders.refund") && paid && refundable > 0 && <Refund orderId={o.id} max={paiseToRupeesString(refundable)} cod={o.paymentMethod === "COD"} />}
               {can("orders.cancel") && !["CANCELLED", "COMPLETED", "EXPIRED"].includes(o.status) && ["UNFULFILLED", "PACKED", "READY_TO_SHIP"].includes(o.fulfillmentStatus) && <CancelOrder orderId={o.id} paid={paid} cod={o.paymentMethod === "COD"} />}
             </div>
@@ -88,7 +88,7 @@ export default async function OrderAdmin({ params }: { params: Promise<{ id: str
                       {t && <a href={t} target="_blank" rel="noopener noreferrer" className="label text-forest">Track</a>}
                       {label && <a href={label} target="_blank" rel="noopener noreferrer" className="label text-forest">Label</a>}
                       {!s.cancelledAt && can("orders.fulfill") && !["DELIVERED", "RTO_DELIVERED"].includes(s.status) && <ShipmentStatus orderId={o.id} shipmentId={s.id} />}
-                      {!s.cancelledAt && s.status === "READY_TO_SHIP" && can("orders.fulfill") && <ActionButton size="sm" variant="ghost" confirm="Cancel this shipment?" action={() => cancelShipmentAction(s.id, o.id)}>Cancel</ActionButton>}
+                      {!s.cancelledAt && s.status === "READY_TO_SHIP" && can("orders.fulfill") && <ActionButton size="sm" variant="ghost" confirm="Cancel this shipment?" action={cancelShipmentAction.bind(null, s.id, o.id)}>Cancel</ActionButton>}
                     </div>
                   </div>
                   {s.events.length > 0 && <ul className="mt-2 space-y-1 text-xs text-stone">{s.events.map((e) => <li key={e.id}>{formatDateTime(e.occurredAt)} — {e.description ?? e.status}{e.location && ` · ${e.location}`}</li>)}</ul>}
