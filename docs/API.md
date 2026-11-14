@@ -24,6 +24,7 @@ All JSON endpoints return `{ "ok": true, "data": … }` or `{ "ok": false, "erro
 | `POST /api/newsletter` | `{ email, consent: true, source? }` | Double opt-in by default; never reveals existing subscriptions. |
 | `POST /api/checkout` | `{ idempotencyKey (uuid), email, phone, address{fullName,phone,line1,line2?,landmark?,city,state,pincode,country:"IN"}, paymentMethod: "ONLINE"\|"COD", acceptTerms: true, marketingOptIn?, saveAddress?, customerNote?, expectedTotal (paise) }` | Creates the order (or returns the existing one for the same key). Returns `{ orderNumber, accessToken, payment: { provider, keyId, providerOrderId, amount, currency, prefill } \| null }`. `409 TOTAL_CHANGED` if the server total differs from what was shown. |
 | `POST /api/checkout/retry` | `{ orderNumber, token? }` | New payment attempt while the stock hold is active. |
+| `POST /api/checkout/replace` | `{ orderNumber, token? }` | Shopper changed details/method after a failed payment: confirms with the gateway, then releases the unpaid order. Returns `{ status: "released" \| "paid" }`. |
 | `POST /api/payments/verify` | `{ razorpay_order_id, razorpay_payment_id, razorpay_signature }` | HMAC verification + server-side payment fetch. Returns `{ status: paid\|on_hold\|failed\|pending }`. |
 | `POST /api/payments/failed` | `{ providerOrderId }` | Browser hint; server reconciles with the gateway. |
 | `GET /api/orders/:number/status?t=` | — | Owner or access token; reconciles pending payments. |

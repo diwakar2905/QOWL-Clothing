@@ -19,6 +19,16 @@ export async function hit(key: string, limit: number, windowSeconds: number): Pr
   return { allowed: count <= limit, count };
 }
 
+/** Current count in an unexpired window, without incrementing. */
+export async function peek(key: string): Promise<number> {
+  const b = await db.rateLimitBucket.findUnique({ where: { key } });
+  return b && b.resetAt > new Date() ? b.count : 0;
+}
+
+export async function clear(key: string) {
+  await db.rateLimitBucket.deleteMany({ where: { key } });
+}
+
 export async function enforce(key: string, limit: number, windowSeconds: number, message?: string) {
   const r = await hit(key, limit, windowSeconds);
   if (!r.allowed) throw tooMany(message);

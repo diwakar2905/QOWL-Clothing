@@ -11,7 +11,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
   const sp = await searchParams;
   if (await getCurrentUser()) redirect("/account");
   return (
-    <AuthShell title="Join QOWL" subtitle="Track orders, save addresses and keep your wishlist across devices.">
+    <AuthShell title="Join QOWL" subtitle="Track orders, save addresses, request returns and keep your wishlist across devices.">
       <RegisterForm next={safeInternalPath(sp.next, "/account")} email={sp.email?.slice(0, 254)} />
     </AuthShell>
   );

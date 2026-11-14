@@ -153,7 +153,7 @@ export async function markPaymentFailed(args: { orderId: string; providerOrderId
 }
 
 /** Release stock and coupons for orders whose payment window lapsed. Idempotent. */
-export async function expireOrder(orderId: string) {
+export async function expireOrder(orderId: string, note = "Payment window expired") {
   return db.$transaction(async (tx) => {
     const order = await lockOrder(tx, orderId);
     if (order.status !== "PENDING_PAYMENT" && order.status !== "PAYMENT_FAILED") {
@@ -163,7 +163,7 @@ export async function expireOrder(orderId: string) {
     }
     await releaseReservations(tx, order.id, "EXPIRED");
     await tx.couponRedemption.updateMany({ where: { orderId: order.id, status: "RESERVED" }, data: { status: "RELEASED" } });
-    await setStatuses(tx, order, { status: "EXPIRED" }, SYSTEM, "Payment window expired");
+    await setStatuses(tx, order, { status: "EXPIRED" }, SYSTEM, note);
     return true;
   });
 }

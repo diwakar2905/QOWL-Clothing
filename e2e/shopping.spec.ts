@@ -68,6 +68,23 @@ test.describe("Shopping", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Thank you/);
   });
 
+  test("6b after a failed payment, switching to COD places a fresh order and releases the old one", async ({ page }) => {
+    const p = await createProduct({ M: 1 });
+    await addToBag(page, p.slug, "M");
+    await page.goto("/checkout");
+    await fillCheckout(page);
+    await payMock(page, "Simulate failure");
+    await expect(page.getByRole("button", { name: /Retry payment/ })).toBeVisible();
+    await page.getByRole("radio", { name: /Cash on Delivery/ }).check();
+    await page.getByRole("button", { name: /Place order/ }).click();
+    await page.waitForURL(/checkout\/confirmation/);
+    const number = new URL(page.url()).searchParams.get("order")!;
+    expect((await order(number)).paymentMethod).toBe("COD");
+    const rows = (await pool.query(`SELECT o.status, o."paymentMethod" FROM "Order" o JOIN "OrderItem" i ON i."orderId"=o.id WHERE i."variantId"=$1 ORDER BY o."placedAt"`, [p.variants.M])).rows;
+    expect(rows).toEqual([{ status: "EXPIRED", paymentMethod: "ONLINE" }, { status: "CONFIRMED", paymentMethod: "COD" }]);
+    expect(await stock(p.variants.M)).toMatchObject({ onHand: 0, reserved: 0, committed: 1 });
+  });
+
   test("8 a duplicated payment webhook is processed once", async ({ page, request }) => {
     const p = await createProduct({ M: 2 });
     await addToBag(page, p.slug, "M");

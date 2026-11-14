@@ -15,8 +15,8 @@ import { buildCartView, currentCartRow } from "./cart";
 import { evaluateCoupon } from "./coupons";
 import { getSettings } from "./settings";
 import { commitOrderStock, reserve } from "./inventory";
-import { nextNumber, orderAccessToken, orderLink, recordHistory } from "./orders";
-import { ensureGatewayOrder } from "./payments";
+import { expireOrder, nextNumber, orderAccessToken, orderLink, recordHistory } from "./orders";
+import { ensureGatewayOrder, reconcileOrderPayments } from "./payments";
 import { enforce } from "./rate-limit";
 
 export const checkoutSchema = z.object({
@@ -244,6 +244,25 @@ export async function placeOrder(input: CheckoutInput, ctx: { ip: string }): Pro
     // Keep the reservation until expiry so the customer can retry immediately.
     throw new AppError("GATEWAY_UNAVAILABLE", "We couldn't reach the payment provider. Your items are held for a few minutes — please try again.", 503);
   }
+}
+
+/**
+ * The shopper changed their details or payment method after a failed/abandoned
+ * online payment: confirm with the gateway that the order really is unpaid,
+ * then release it so a fresh order can be placed. If it was paid after all,
+ * report that instead so no second order is created.
+ */
+export async function replaceUnpaidOrder(orderNumber: string, accessToken: string | null, userId: string | null): Promise<{ status: "released" | "paid"; orderNumber: string }> {
+  const order = await db.order.findUnique({ where: { number: orderNumber } });
+  const allowed = order && ((userId && order.userId === userId) || (accessToken && order.accessTokenHash === sha256(accessToken)));
+  if (!order || !allowed) throw new AppError("NOT_FOUND", "Order not found", 404);
+  if (order.paymentMethod === "ONLINE" && ["PENDING_PAYMENT", "PAYMENT_FAILED"].includes(order.status)) {
+    await reconcileOrderPayments(order.id);
+  }
+  const fresh = await db.order.findUniqueOrThrow({ where: { id: order.id } });
+  if (["PAID", "PARTIALLY_REFUNDED", "REFUNDED"].includes(fresh.paymentStatus)) return { status: "paid", orderNumber };
+  if (["PENDING_PAYMENT", "PAYMENT_FAILED"].includes(fresh.status)) await expireOrder(fresh.id, "Replaced by a new checkout");
+  return { status: "released", orderNumber };
 }
 
 /** Retry payment for an order still awaiting payment (same reservation). */
