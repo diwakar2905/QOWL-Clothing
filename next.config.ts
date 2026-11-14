@@ -41,6 +41,7 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   agentRules: false,
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   reactStrictMode: true,
   serverExternalPackages: ["@node-rs/argon2", "sharp", "pg"],
   images: {

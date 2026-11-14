@@ -78,7 +78,7 @@ export function ProductView({ p, conceptNotice, codEnabled, returnsSummary }: { 
   };
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1.75fr)_minmax(340px,1fr)] lg:gap-12">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1.75fr)_minmax(340px,1fr)] lg:gap-12">
       <div>
         {/* Remount per colour so the gallery resets to the first image */}
         <Gallery key={colorId} images={galleryImages} conceptNotice={conceptNotice} />

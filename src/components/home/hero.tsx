@@ -39,7 +39,7 @@ export function Hero({ slides, autoplay, interval }: { slides: HeroSlideData[]; 
               {/* Model image: centered, edges dissolve into the haze */}
               <div className="pointer-events-none absolute inset-x-0 bottom-0 top-[84px] flex justify-center lg:static lg:order-2 lg:items-end">
                 <div className="hero-mask relative h-full w-[min(78vw,420px)] lg:h-[calc(100%-1rem)] lg:w-full">
-                  <picture>
+                  <picture className="absolute inset-0 block">
                     {s.mobileImageUrl && <source media="(max-width: 767px)" srcSet={s.mobileImageUrl} />}
                     <Image src={s.desktopImageUrl} alt={s.imageAlt} fill priority={i === 0} sizes="(max-width: 1024px) 78vw, 420px" className="object-cover object-top opacity-60 lg:opacity-95" />
                   </picture>

@@ -63,7 +63,7 @@ export function Campaign({ data }: { data: SectionData<"CAMPAIGN"> }) {
         </div>
         {data.imageUrl && (
           <div className="campaign-mask relative min-h-[320px] sm:min-h-[420px]">
-            <picture>
+            <picture className="absolute inset-0 block">
               {data.mobileImageUrl && <source media="(max-width: 767px)" srcSet={data.mobileImageUrl} />}
               <Image src={data.imageUrl} alt={data.imageAlt} fill sizes="(max-width: 1024px) 100vw, 64vw" className="object-cover object-center" />
             </picture>

@@ -55,11 +55,13 @@
 
 @layer base {
   html {
+    overflow-x: clip;
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
     scroll-padding-top: 6rem;
   }
   body {
+    overflow-x: clip;
     background: var(--color-ivory);
     color: var(--color-charcoal);
     font-family: var(--font-sans);
@@ -110,6 +112,7 @@
     text-transform: uppercase;
     line-height: 0.95;
     letter-spacing: 0.01em;
+    overflow-wrap: anywhere;
   }
   .haze {
     background:

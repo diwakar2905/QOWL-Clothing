@@ -30,7 +30,7 @@ export default async function CollectionsPage() {
                 <li key={c.id}>
                   <Link href={href} className="group relative block aspect-[4/3] overflow-hidden rounded-[3px] bg-forest-deep sm:aspect-[5/4] lg:aspect-[4/3.2]">
                     {c.heroImageUrl && (
-                      <picture>
+                      <picture className="absolute inset-0 block">
                         {c.mobileImageUrl && <source media="(max-width: 767px)" srcSet={c.mobileImageUrl} />}
                         <Image src={c.heroImageUrl} alt={c.imageAlt ?? c.title} fill priority={i < 3} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
                       </picture>

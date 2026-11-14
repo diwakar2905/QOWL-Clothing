@@ -34,7 +34,7 @@ export function Gallery({ images, conceptNotice }: { images: GalleryImage[]; con
         >
           {images.map((im, i) => (
             <button key={im.id} type="button" onClick={() => setZoom(i)} className="relative aspect-[4/5] w-full shrink-0 snap-center bg-cream" aria-label={`Zoom image ${i + 1} of ${images.length}`}>
-              <Image src={im.url} alt={im.alt} fill priority={i === 0} sizes="100vw" className="object-cover" />
+              <Image src={im.url} alt={im.alt} fill priority={i === 0} sizes="(max-width: 1023px) 100vw, 1px" className="object-cover" />
               {im.isConcept && <ConceptBadge className="absolute left-3 top-3" />}
             </button>
           ))}

@@ -306,11 +306,11 @@ export function CheckoutForm({
           }
         />
         <Checkbox className="mt-3" form="checkout-form" {...register("marketingOptIn")} label="Email me about new drops and releases (optional)." />
-        <div ref={errorRef} className="mt-4">{error && <FormMessage>{error}</FormMessage>}</div>
+        <div ref={errorRef} className="mt-4">{error && !(!cart.canCheckout && cart.blockers.some((b) => error.startsWith(b.slice(0, 20)) || b.startsWith(error.slice(0, 20)))) && <FormMessage>{error}</FormMessage>}</div>
         {!cart.canCheckout && <FormMessage>{cart.blockers[0]} <Link href="/cart" className="underline">Review bag</Link></FormMessage>}
         <Button type="submit" form="checkout-form" size="lg" className="mt-5 w-full" loading={submitting} disabled={!cart.canCheckout}>
           <Lock className="h-4 w-4" />
-          {pending ? `Retry payment — ${formatINR(pending.amount)}` : paymentMethod === "COD" ? `Place order — ${formatINR(total)}` : `Pay ${formatINR(total)}`}
+          {!cart.canCheckout ? "Review your bag to continue" : pending ? `Retry payment — ${formatINR(pending.amount)}` : paymentMethod === "COD" ? `Place order — ${formatINR(total)}` : `Pay ${formatINR(total)}`}
         </Button>
       </aside>
 
