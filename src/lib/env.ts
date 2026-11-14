@@ -45,6 +45,10 @@ const schema = z
     S3_SECRET_ACCESS_KEY: z.string().optional(),
     MEDIA_PUBLIC_BASE_URL: z.string().optional(),
 
+    // "Continue with Google" for customers. Leave both empty to hide the button.
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
+
     CRON_SECRET: z.string().min(16),
     TRUST_PROXY: bool.default(false),
     RESERVATION_TTL_MINUTES: z.coerce.number().int().min(5).max(120).default(30),
@@ -77,6 +81,9 @@ const schema = z
     req("SHIPROCKET_PASSWORD", sr, "Required when SHIPPING_PROVIDER=shiprocket");
     req("SHIPROCKET_PICKUP_PINCODE", sr, "Required when SHIPPING_PROVIDER=shiprocket");
     req("RESEND_API_KEY", e.EMAIL_PROVIDER === "resend", "Required when EMAIL_PROVIDER=resend");
+    if (!!e.GOOGLE_CLIENT_ID !== !!e.GOOGLE_CLIENT_SECRET) {
+      ctx.addIssue({ code: "custom", path: [e.GOOGLE_CLIENT_ID ? "GOOGLE_CLIENT_SECRET" : "GOOGLE_CLIENT_ID"], message: "Set both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, or neither" });
+    }
     const s3 = e.STORAGE_DRIVER === "s3";
     for (const k of ["S3_BUCKET", "S3_REGION", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "MEDIA_PUBLIC_BASE_URL"] as const) {
       req(k, s3, "Required when STORAGE_DRIVER=s3");

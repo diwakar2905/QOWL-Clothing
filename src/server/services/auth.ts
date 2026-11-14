@@ -6,6 +6,7 @@ import { AppError, badRequest } from "@/lib/errors";
 import { emailSchema, indianMobileSchema, passwordSchema } from "@/lib/validation";
 import { logger } from "@/lib/logger";
 import { hashPassword, verifyPassword, dummyVerify } from "@/server/auth/password";
+import type { GoogleIdentity } from "@/server/auth/google";
 import { createSession, destroyAllSessions, destroyCurrentSession, getSession } from "@/server/auth/session";
 import { enqueueEmail } from "@/server/notifications/outbox";
 import { enforce, hit, peek, clear } from "./rate-limit";
@@ -135,6 +136,63 @@ export async function verifyEmail(token: string, ctx: { ip?: string; userAgent?:
     await createSession(rec.userId, { isStaff: !!rec.user.role, ip: ctx.ip, userAgent: ctx.userAgent });
     if (!rec.user.role) await mergeGuestCartOnLogin(rec.userId);
   }
+}
+
+/**
+ * "Continue with Google" for customers. Google has verified the email, so:
+ * - a known Google account signs straight in;
+ * - an existing account with the same email is linked. If that account's email
+ *   was never verified, its password is removed and its sessions ended, because
+ *   someone other than the inbox owner may have created it;
+ * - otherwise a new, already-verified account is created.
+ * Staff accounts always use the password sign-in at /admin/login.
+ */
+export async function signInWithGoogle(identity: GoogleIdentity, ctx: { ip: string; userAgent?: string }) {
+  await enforce(`google:ip:${ctx.ip}`, 30, 900, "Too many sign-in attempts. Please wait 15 minutes.");
+  const disabled = new AppError("ACCOUNT_DISABLED", "This account is not active. Please contact support.", 403);
+  const staff = new AppError("STAFF_GOOGLE", "Staff accounts can't use Google sign-in. Sign in at the admin login instead.", 403);
+
+  let user = await db.user.findUnique({ where: { googleId: identity.sub }, include: { role: true } });
+  if (!user) {
+    const byEmail = await db.user.findUnique({ where: { email: identity.email }, include: { role: true } });
+    if (byEmail) {
+      if (byEmail.role) throw staff;
+      if (byEmail.status === "SUSPENDED" || byEmail.status === "DELETED") throw disabled;
+      if (byEmail.googleId && byEmail.googleId !== identity.sub) {
+        throw new AppError("GOOGLE_MISMATCH", "This email is linked to a different Google account. Sign in with that account or with your password.", 409);
+      }
+      const untrusted = !byEmail.emailVerifiedAt;
+      user = await db.user.update({
+        where: { id: byEmail.id },
+        data: {
+          googleId: identity.sub,
+          emailVerifiedAt: byEmail.emailVerifiedAt ?? new Date(),
+          name: byEmail.name ?? identity.name,
+          ...(untrusted ? { passwordHash: null } : {}),
+        },
+        include: { role: true },
+      });
+      if (untrusted) await destroyAllSessions(user.id);
+      logger.info("auth.google_linked", { userId: user.id, clearedPassword: untrusted && !!byEmail.passwordHash });
+    } else {
+      try {
+        user = await db.user.create({
+          data: { email: identity.email, name: identity.name, googleId: identity.sub, emailVerifiedAt: new Date() },
+          include: { role: true },
+        });
+      } catch (e) {
+        // Two callbacks racing for the same new account: use the one that won.
+        if ((e as { code?: string }).code !== "P2002") throw e;
+        user = await db.user.findUniqueOrThrow({ where: { googleId: identity.sub }, include: { role: true } });
+      }
+    }
+  }
+  if (user.role) throw staff;
+  if (user.status === "SUSPENDED" || user.status === "DELETED") throw disabled;
+  await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+  await createSession(user.id, { isStaff: false, ip: ctx.ip, userAgent: ctx.userAgent });
+  await mergeGuestCartOnLogin(user.id);
+  return user;
 }
 
 export async function requestPasswordReset(emailRaw: string, ctx: { ip: string }) {

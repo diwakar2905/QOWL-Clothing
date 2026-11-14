@@ -31,3 +31,19 @@
 
 ## Scaling notes
 Rate limits and sessions are stored in Postgres, so multiple app instances work without Redis. Catalogue listing filters in memory after a visibility-scoped query — fine for hundreds of products; move filters into SQL before thousands.
+
+## Google sign-in (optional)
+
+Customers can use **Continue with Google** on the sign-in and sign-up pages. The button only appears when both variables are set.
+
+1. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), create or pick a project.
+2. **OAuth consent screen**: choose *External*, fill in the app name (QOWL), support email, logo and your domain. Scopes: `openid`, `email`, `profile` (all non-sensitive, so no Google review is needed). Publish the app when you go live; in *Testing* mode only listed test users can sign in.
+3. **Credentials → Create credentials → OAuth client ID → Web application.**
+   - Authorised JavaScript origin: your `APP_URL` (for example `https://qowl.in`, and `http://localhost:3000` for local work).
+   - Authorised redirect URI: `<APP_URL>/api/auth/google/callback` (for example `https://qowl.in/api/auth/google/callback`).
+4. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in the environment and restart.
+
+How accounts are matched:
+- A new Google user gets a verified account with no password (they can set one later with *Forgot password*).
+- An existing account with the same email is linked. If that account's email was never verified, its password is removed and its sessions are ended, because someone else may have registered it.
+- Staff accounts can't use Google; they keep using `/admin/login`.
