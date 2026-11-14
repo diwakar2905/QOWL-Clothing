@@ -35,16 +35,13 @@ export function Hero({ slides, autoplay, interval }: { slides: HeroSlideData[]; 
         const words = s.heading.split(" ");
         return (
           <div key={s.id} aria-roledescription={count > 1 ? "slide" : undefined} aria-label={count > 1 ? `${i + 1} of ${count}` : undefined} hidden={!active} className="relative">
-            <div className="mx-auto grid min-h-[min(100svh,820px)] max-w-[1440px] grid-rows-[1fr_auto] px-5 pt-[84px] sm:px-8 lg:grid-cols-[1fr_minmax(280px,420px)_1fr] lg:grid-rows-1 lg:px-12">
-              {/* Model image: centered, edges dissolve into the haze */}
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 top-[84px] flex justify-center lg:static lg:order-2 lg:items-end">
-                <div className="hero-mask relative h-full w-[min(78vw,420px)] lg:h-[calc(100%-1rem)] lg:w-full">
-                  <picture className="absolute inset-0 block">
-                    {s.mobileImageUrl && <source media="(max-width: 767px)" srcSet={s.mobileImageUrl} />}
-                    <Image src={s.desktopImageUrl} alt={s.imageAlt} fill priority={i === 0} sizes="(max-width: 1024px) 78vw, 420px" className="object-cover object-top opacity-60 lg:opacity-95" />
-                  </picture>
-                </div>
-              </div>
+            {/* Full-bleed campaign image; a dark fade keeps the copy readable */}
+            <picture className="pointer-events-none absolute inset-0 -z-10 block">
+              {s.mobileImageUrl && <source media="(max-width: 767px)" srcSet={s.mobileImageUrl} />}
+              <Image src={s.desktopImageUrl} alt={s.imageAlt} fill priority={i === 0} sizes="100vw" className="object-cover object-[50%_30%] lg:object-[50%_60%]" />
+            </picture>
+            <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-t from-forest-deep/90 via-forest-deep/25 to-forest-deep/40 lg:bg-gradient-to-r lg:from-forest-deep/80 lg:via-forest-deep/20 lg:to-transparent" />
+            <div className="mx-auto grid min-h-[min(100svh,820px)] max-w-[1440px] lg:min-h-[min(100svh,56vw)] grid-rows-[1fr_auto] px-5 pt-[84px] sm:px-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(160px,320px)_minmax(0,0.7fr)] lg:grid-rows-1 lg:px-12">
               <div className="relative z-10 flex flex-col justify-end pb-10 lg:order-1 lg:justify-center lg:pb-0">
                 {s.eyebrow && (
                   <p className="label-wide flex items-center gap-4 text-ivory/90 animate-rise">
@@ -52,7 +49,7 @@ export function Hero({ slides, autoplay, interval }: { slides: HeroSlideData[]; 
                     <span aria-hidden className="h-px w-14 bg-ivory/60" />
                   </p>
                 )}
-                <h1 className="display mt-5 text-[3.6rem] leading-[0.9] sm:text-7xl lg:text-[5.4rem] xl:text-[6.2rem] animate-rise [animation-delay:120ms]">
+                <h1 className="display mt-5 text-[3.6rem] leading-[0.9] sm:text-7xl lg:text-[min(5.2vw,5.4rem)] animate-rise [animation-delay:120ms]">
                   {words.length > 1 ? (
                     <>
                       {words.slice(0, -1).join(" ")}
@@ -76,7 +73,7 @@ export function Hero({ slides, autoplay, interval }: { slides: HeroSlideData[]; 
                 </div>
               </div>
               {s.sideLabels.length > 0 && (
-                <ul className="relative z-10 hidden flex-col justify-center gap-3 self-center justify-self-end border-l border-ivory/40 py-2 pl-6 lg:order-3 lg:flex">
+                <ul className="relative z-10 hidden flex-col justify-center gap-3 self-center justify-self-end border-l border-ivory/40 py-2 pl-6 lg:order-3 lg:col-start-3 lg:flex">
                   {s.sideLabels.map((l) => (
                     <li key={l} className="label-wide text-ivory/85">{l}</li>
                   ))}

@@ -30,6 +30,7 @@ if (FIXTURES && PROD) {
 
 const SIZES = ["S", "M", "L", "XL", "XXL"];
 const C = (file: string) => `/concept/${file}.webp`;
+const HERO_ALT = "Model in a washed black QOWL hoodie, wide-leg black denim, cap and green sneakers, standing in green mist";
 
 type Fixture = {
   name: string;
@@ -191,15 +192,21 @@ async function base() {
   ];
   for (const s of sections) await db.homepageSection.upsert({ where: { key: s.key }, create: s, update: {} });
 
+  // Move stores still on the original placeholder hero to the Green Mist campaign image.
+  await db.heroSlide.updateMany({
+    where: { desktopImageUrl: C("hero-model") },
+    data: { desktopImageUrl: C("hero-green-mist"), mobileImageUrl: C("hero-green-mist-mobile"), imageAlt: HERO_ALT, isConcept: false },
+  });
   if (!(await db.heroSlide.count())) {
     await db.heroSlide.create({
       data: {
         eyebrow: "QOWL / Drop 001",
         heading: "The Unwritten",
         subheading: "Wear Your Own Code.",
-        desktopImageUrl: C("hero-model"),
-        imageAlt: "Model in a black QOWL jacket with green script artwork, baggy jeans and a cap against a green haze",
-        isConcept: true,
+        desktopImageUrl: C("hero-green-mist"),
+        mobileImageUrl: C("hero-green-mist-mobile"),
+        imageAlt: HERO_ALT,
+        isConcept: false,
         primaryLabel: "Shop Drop 001",
         primaryHref: "/collections/drop-001",
         secondaryLabel: "Explore the Collection",
