@@ -3,6 +3,7 @@ import { mkdir, writeFile, readFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { createHash } from "node:crypto";
 import { db } from "@/lib/db";
 import { randomToken } from "@/lib/crypto";
 import { AppError } from "@/lib/errors";
@@ -49,7 +50,51 @@ class S3Driver implements Driver {
   }
 }
 
+/** Parses CLOUDINARY_URL (cloudinary://<api_key>:<api_secret>@<cloud_name>). */
+export function cloudinaryConfig(raw = process.env.CLOUDINARY_URL) {
+  if (!raw) return null;
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== "cloudinary:" || !u.username || !u.password || !u.hostname) return null;
+    return { apiKey: decodeURIComponent(u.username), apiSecret: decodeURIComponent(u.password), cloudName: u.hostname };
+  } catch {
+    return null;
+  }
+}
+
+/** Cloudinary request signature: SHA-1 of the sorted params plus the API secret. */
+export function cloudinarySignature(params: Record<string, string | number>, apiSecret: string) {
+  const toSign = Object.keys(params).sort().map((k) => `${k}=${params[k]}`).join("&");
+  return createHash("sha1").update(toSign + apiSecret).digest("hex");
+}
+
+class CloudinaryDriver implements Driver {
+  private cfg = cloudinaryConfig()!;
+  private async call(action: "upload" | "destroy", params: Record<string, string | number>, file?: Buffer) {
+    const signed = { ...params, timestamp: Math.floor(Date.now() / 1000) };
+    const form = new FormData();
+    for (const [k, v] of Object.entries(signed)) form.set(k, String(v));
+    form.set("api_key", this.cfg.apiKey);
+    form.set("signature", cloudinarySignature(signed, this.cfg.apiSecret));
+    if (file) form.set("file", new Blob([new Uint8Array(file)], { type: "image/webp" }), "image.webp");
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${this.cfg.cloudName}/image/${action}`, { method: "POST", body: form, signal: AbortSignal.timeout(30_000) });
+    const json = (await res.json().catch(() => ({}))) as { secure_url?: string; result?: string; error?: { message?: string } };
+    if (!res.ok) throw new AppError("UPLOAD_FAILED", `Image storage error: ${json.error?.message ?? res.status}`, 502);
+    return json;
+  }
+  async put(key: string, body: Buffer) {
+    // Already validated, resized and re-encoded to WebP by storeImage().
+    const json = await this.call("upload", { public_id: key.replace(/\.webp$/, ""), overwrite: "false" }, body);
+    if (!json.secure_url) throw new AppError("UPLOAD_FAILED", "Image storage didn't return a URL.", 502);
+    return json.secure_url;
+  }
+  async remove(key: string) {
+    await this.call("destroy", { public_id: key.replace(/\.webp$/, ""), invalidate: "true" });
+  }
+}
+
 function driver(): Driver {
+  if (process.env.STORAGE_DRIVER === "cloudinary") return new CloudinaryDriver();
   if (process.env.STORAGE_DRIVER === "s3") return new S3Driver(process.env.S3_BUCKET!, process.env.MEDIA_PUBLIC_BASE_URL!);
   return new LocalDriver(path.resolve(process.env.LOCAL_STORAGE_DIR ?? "./storage/uploads"));
 }

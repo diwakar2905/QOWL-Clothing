@@ -36,7 +36,8 @@ const schema = z
     // adapter interface exists but no provider is wired up yet.
     SMS_PROVIDER: z.enum(["none"]).default("none"),
 
-    STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
+    STORAGE_DRIVER: z.enum(["local", "s3", "cloudinary"]).default("local"),
+    CLOUDINARY_URL: z.string().optional(),
     LOCAL_STORAGE_DIR: z.string().default("./storage/uploads"),
     S3_BUCKET: z.string().optional(),
     S3_REGION: z.string().optional(),
@@ -84,12 +85,15 @@ const schema = z
     if (!!e.GOOGLE_CLIENT_ID !== !!e.GOOGLE_CLIENT_SECRET) {
       ctx.addIssue({ code: "custom", path: [e.GOOGLE_CLIENT_ID ? "GOOGLE_CLIENT_SECRET" : "GOOGLE_CLIENT_ID"], message: "Set both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, or neither" });
     }
+    if (e.STORAGE_DRIVER === "cloudinary" && !/^cloudinary:\/\/[^:]+:[^@]+@[^/]+$/.test(e.CLOUDINARY_URL ?? "")) {
+      ctx.addIssue({ code: "custom", path: ["CLOUDINARY_URL"], message: "Set CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name> when STORAGE_DRIVER=cloudinary" });
+    }
     const s3 = e.STORAGE_DRIVER === "s3";
     for (const k of ["S3_BUCKET", "S3_REGION", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "MEDIA_PUBLIC_BASE_URL"] as const) {
       req(k, s3, "Required when STORAGE_DRIVER=s3");
     }
     if (prod && e.STORAGE_DRIVER === "local" && process.env.ALLOW_LOCAL_STORAGE_IN_PRODUCTION !== "true") {
-      ctx.addIssue({ code: "custom", path: ["STORAGE_DRIVER"], message: "Use STORAGE_DRIVER=s3 in production (or set ALLOW_LOCAL_STORAGE_IN_PRODUCTION=true for a single persistent host)" });
+      ctx.addIssue({ code: "custom", path: ["STORAGE_DRIVER"], message: "Use STORAGE_DRIVER=cloudinary or s3 in production (or set ALLOW_LOCAL_STORAGE_IN_PRODUCTION=true for a single persistent host)" });
     }
   });
 

@@ -7,6 +7,16 @@ if (mediaBase) {
   remotePatterns.push({ protocol: u.protocol.replace(":", "") as "https" | "http", hostname: u.hostname, pathname: `${u.pathname.replace(/\/$/, "")}/**` });
 }
 
+// Cloudinary (STORAGE_DRIVER=cloudinary): allow this account's delivery URLs.
+const cloudName = (() => {
+  try {
+    return process.env.CLOUDINARY_URL ? new URL(process.env.CLOUDINARY_URL).hostname : "";
+  } catch {
+    return "";
+  }
+})();
+if (cloudName) remotePatterns.push({ protocol: "https", hostname: "res.cloudinary.com", pathname: `/${cloudName}/image/upload/**` });
+
 const isProd = process.env.NODE_ENV === "production";
 
 // Content Security Policy. Razorpay Checkout requires its script, frame and API
@@ -17,7 +27,7 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' https://checkout.razorpay.com${isProd ? "" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob:${mediaBase ? " " + new URL(mediaBase).origin : ""} https://*.razorpay.com`,
+  `img-src 'self' data: blob:${mediaBase ? " " + new URL(mediaBase).origin : ""}${cloudName ? " https://res.cloudinary.com" : ""} https://*.razorpay.com`,
   "font-src 'self' data:",
   "connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://*.razorpay.com",
   "frame-src https://api.razorpay.com https://checkout.razorpay.com",
