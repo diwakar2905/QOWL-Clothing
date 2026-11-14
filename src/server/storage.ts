@@ -1,141 +1,97 @@
 import "server-only";
-import { randomUUID } from "node:crypto";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, readFile, unlink } from "node:fs/promises";
 import path from "node:path";
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import sharp from "sharp";
-import { env } from "@/lib/env";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { db } from "@/lib/db";
+import { randomToken } from "@/lib/crypto";
 import { AppError } from "@/lib/errors";
 
-type StoreImageOpts = {
-  folder?: string;
-  uploadedBy?: string;
-  maxWidth?: number;
-};
+const MAX_BYTES = 12 * 1024 * 1024;
+const ALLOWED = new Set(["jpeg", "png", "webp", "avif", "heif"]);
 
-type StoredImage = {
-  storageKey: string;
-  url: string;
-  width: number;
-  height: number;
-};
+export type StoredImage = { url: string; storageKey: string; width: number; height: number; bytes: number; mimeType: string };
 
-const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
-const MAX_INPUT_PIXELS = 40_000_000;
-const DEFAULT_MAX_WIDTH = 2200;
-const folderRe = /^[a-z0-9][a-z0-9-_]{0,63}$/i;
-const keyRe = /^[a-zA-Z0-9._/-]+$/;
-
-let s3Client: S3Client | undefined;
-
-function localRoot() {
-  return path.resolve(process.cwd(), env.LOCAL_STORAGE_DIR);
+interface Driver {
+  put(key: string, body: Buffer, contentType: string): Promise<string>;
+  remove(key: string): Promise<void>;
 }
 
-function sanitizeFolder(folder?: string) {
-  const value = (folder ?? "misc").trim();
-  if (!folderRe.test(value)) throw new AppError("VALIDATION", "Invalid upload folder.");
-  return value;
+class LocalDriver implements Driver {
+  constructor(private dir: string) {}
+  async put(key: string, body: Buffer) {
+    const file = path.join(this.dir, key);
+    await mkdir(path.dirname(file), { recursive: true });
+    await writeFile(file, body);
+    return `/media/${key}`;
+  }
+  async remove(key: string) {
+    await unlink(path.join(this.dir, key)).catch(() => {});
+  }
 }
 
-function assertSafeKey(key: string) {
-  if (!key || !keyRe.test(key) || key.includes("..") || key.startsWith("/")) return false;
-  return key.split("/").every((part) => part.length > 0 && part !== "." && part !== "..");
-}
-
-function publicUrl(key: string) {
-  if (env.STORAGE_DRIVER === "local") return `/media/${key}`;
-  const base = env.MEDIA_PUBLIC_BASE_URL!.replace(/\/+$/, "");
-  return `${base}/${key}`;
-}
-
-function getS3Client() {
-  if (!s3Client) {
-    s3Client = new S3Client({
-      region: env.S3_REGION,
-      endpoint: env.S3_ENDPOINT || undefined,
-      credentials: {
-        accessKeyId: env.S3_ACCESS_KEY_ID!,
-        secretAccessKey: env.S3_SECRET_ACCESS_KEY!,
-      },
-      forcePathStyle: Boolean(env.S3_ENDPOINT),
+class S3Driver implements Driver {
+  private client: S3Client;
+  constructor(private bucket: string, private publicBase: string) {
+    this.client = new S3Client({
+      region: process.env.S3_REGION,
+      endpoint: process.env.S3_ENDPOINT || undefined,
+      forcePathStyle: !!process.env.S3_ENDPOINT,
+      credentials: { accessKeyId: process.env.S3_ACCESS_KEY_ID!, secretAccessKey: process.env.S3_SECRET_ACCESS_KEY! },
     });
   }
-  return s3Client;
-}
-
-async function encodeImage(file: File, maxWidth: number) {
-  if (!file.type.startsWith("image/")) throw new AppError("VALIDATION", "Please upload an image file.");
-  if (file.size <= 0) throw new AppError("VALIDATION", "Uploaded file is empty.");
-  if (file.size > MAX_UPLOAD_BYTES) throw new AppError("TOO_LARGE", "Image is too large (max 10MB).", 413);
-
-  const input = Buffer.from(await file.arrayBuffer());
-  const pipeline = sharp(input, { limitInputPixels: MAX_INPUT_PIXELS, failOn: "error" }).rotate();
-  const meta = await pipeline.metadata();
-  if (!meta.width || !meta.height) throw new AppError("VALIDATION", "Invalid image data.");
-
-  const out = await pipeline
-    .resize({ width: Math.max(1, Math.min(maxWidth || DEFAULT_MAX_WIDTH, meta.width)), withoutEnlargement: true })
-    .webp({ quality: 82 })
-    .toBuffer({ resolveWithObject: true });
-
-  return {
-    data: out.data,
-    width: out.info.width,
-    height: out.info.height,
-  };
-}
-
-export async function storeImage(file: File, opts: StoreImageOpts = {}): Promise<StoredImage> {
-  const folder = sanitizeFolder(opts.folder);
-  const maxWidth = Number.isFinite(opts.maxWidth) && opts.maxWidth! > 0 ? Math.floor(opts.maxWidth!) : DEFAULT_MAX_WIDTH;
-  const encoded = await encodeImage(file, maxWidth);
-  const storageKey = `${folder}/${new Date().toISOString().slice(0, 10).replaceAll("-", "/")}/${randomUUID()}.webp`;
-
-  if (env.STORAGE_DRIVER === "local") {
-    const absolute = path.resolve(localRoot(), storageKey);
-    await mkdir(path.dirname(absolute), { recursive: true });
-    await writeFile(absolute, encoded.data);
-  } else {
-    await getS3Client().send(
-      new PutObjectCommand({
-        Bucket: env.S3_BUCKET,
-        Key: storageKey,
-        Body: encoded.data,
-        ContentType: "image/webp",
-        CacheControl: "public, max-age=31536000, immutable",
-      }),
-    );
+  async put(key: string, body: Buffer, contentType: string) {
+    await this.client.send(new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: body, ContentType: contentType, CacheControl: "public, max-age=31536000, immutable" }));
+    return `${this.publicBase.replace(/\/$/, "")}/${key}`;
   }
+  async remove(key: string) {
+    await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
+  }
+}
 
-  return {
-    storageKey,
-    url: publicUrl(storageKey),
-    width: encoded.width,
-    height: encoded.height,
-  };
+function driver(): Driver {
+  if (process.env.STORAGE_DRIVER === "s3") return new S3Driver(process.env.S3_BUCKET!, process.env.MEDIA_PUBLIC_BASE_URL!);
+  return new LocalDriver(path.resolve(process.env.LOCAL_STORAGE_DIR ?? "./storage/uploads"));
+}
+
+/**
+ * Validate and re-encode an uploaded image. Decoding with sharp rejects
+ * non-images and polyglots; re-encoding strips EXIF/GPS metadata.
+ */
+export async function storeImage(file: File, opts: { folder: "products" | "cms" | "collections" | "reviews" | "returns"; uploadedBy?: string; alt?: string; maxWidth?: number }): Promise<StoredImage> {
+  if (!(file instanceof File) || file.size === 0) throw new AppError("NO_FILE", "Choose an image to upload.");
+  if (file.size > MAX_BYTES) throw new AppError("FILE_TOO_LARGE", "Images must be 12 MB or smaller.");
+  const input = Buffer.from(await file.arrayBuffer());
+  let meta;
+  try {
+    meta = await sharp(input, { limitInputPixels: 50_000_000, failOn: "error" }).metadata();
+  } catch {
+    throw new AppError("INVALID_IMAGE", "This file isn't a supported image.");
+  }
+  if (!meta.format || !ALLOWED.has(meta.format)) throw new AppError("INVALID_IMAGE", "Upload a JPEG, PNG, WebP or AVIF image.");
+  if ((meta.width ?? 0) < 200 || (meta.height ?? 0) < 200) throw new AppError("IMAGE_TOO_SMALL", "Images must be at least 200×200 pixels.");
+  const { data, info } = await sharp(input, { limitInputPixels: 50_000_000, failOn: "error" })
+    .rotate()
+    .resize({ width: opts.maxWidth ?? 2400, withoutEnlargement: true })
+    .webp({ quality: 84 })
+    .toBuffer({ resolveWithObject: true });
+  const key = `${opts.folder}/${new Date().toISOString().slice(0, 7)}/${randomToken(12)}.webp`;
+  const url = await driver().put(key, data, "image/webp");
+  await db.mediaAsset.create({ data: { storageKey: key, url, mimeType: "image/webp", width: info.width, height: info.height, bytes: data.length, alt: opts.alt, uploadedBy: opts.uploadedBy } });
+  return { url, storageKey: key, width: info.width, height: info.height, bytes: data.length, mimeType: "image/webp" };
 }
 
 export async function deleteStoredImage(storageKey: string | null | undefined) {
-  if (!storageKey || !assertSafeKey(storageKey)) return;
-  if (env.STORAGE_DRIVER === "local") {
-    const root = localRoot();
-    const target = path.resolve(root, storageKey);
-    if (!target.startsWith(`${root}${path.sep}`)) return;
-    await rm(target, { force: true });
-    return;
-  }
-  await getS3Client().send(new DeleteObjectCommand({ Bucket: env.S3_BUCKET, Key: storageKey }));
+  if (!storageKey) return;
+  await driver().remove(storageKey);
+  await db.mediaAsset.deleteMany({ where: { storageKey } });
 }
 
-export async function readLocal(storageKey: string): Promise<Buffer | null> {
-  if (env.STORAGE_DRIVER !== "local" || !assertSafeKey(storageKey)) return null;
-  const root = localRoot();
-  const target = path.resolve(root, storageKey);
-  if (!target.startsWith(`${root}${path.sep}`)) return null;
-  try {
-    return await readFile(target);
-  } catch {
-    return null;
-  }
+/** Local driver read (served by /media/[...key]); rejects path traversal. */
+export async function readLocal(key: string): Promise<Buffer | null> {
+  if (!/^[a-z]+\/\d{4}-\d{2}\/[A-Za-z0-9_-]+\.webp$/.test(key)) return null;
+  const base = path.resolve(process.env.LOCAL_STORAGE_DIR ?? "./storage/uploads");
+  const file = path.resolve(base, key);
+  if (!file.startsWith(base + path.sep)) return null;
+  return readFile(file).catch(() => null);
 }
