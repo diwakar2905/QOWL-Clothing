@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db";
-import { address, level, makeVariant, resetCookies } from "../support/factory";
+import { address, asShopper, level, makeVariant } from "../support/factory";
 import { addItem, getCartView } from "@/server/services/cart";
 import { placeOrder } from "@/server/services/checkout";
 import { confirmCheckoutPayment } from "@/server/services/payments";
@@ -11,7 +11,7 @@ import { requestReturn } from "@/server/services/returns";
 import { getGateway, MockGateway, __setGateway } from "@/server/payments";
 import { GatewayError } from "@/server/payments/gateway";
 
-beforeEach(() => resetCookies());
+beforeEach(async () => { await asShopper(); });
 const phone = () => `9${String(Math.floor(Math.random() * 1e9)).padStart(9, "0")}`;
 
 async function pendingOrder(qty = 1) {

@@ -69,10 +69,10 @@ export function Header({ links, secondary }: { links: NavLink[]; secondary: NavL
             <button type="button" className={cn(iconBtn, "lg:hidden")} aria-label="Open menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}>
               <Menu className="h-[22px] w-[22px]" strokeWidth={1.4} />
             </button>
-            <ul className="hidden items-center gap-7 lg:flex xl:gap-9">
+            <ul className="hidden items-center gap-4 lg:flex xl:gap-9">
               {links.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className={cn("link-underline py-1 text-[13px] font-medium tracking-wide text-ivory", pathname === l.href && "bg-[length:100%_1px]")} aria-current={pathname === l.href ? "page" : undefined}>
+                  <Link href={l.href} className={cn("link-underline whitespace-nowrap py-1 text-[13px] font-medium tracking-wide text-ivory", pathname === l.href && "bg-[length:100%_1px]")} aria-current={pathname === l.href ? "page" : undefined}>
                     {l.label}
                   </Link>
                 </li>

@@ -2,10 +2,14 @@ import { test, expect } from "@playwright/test";
 import { addToBag, createProduct, fillCheckout, order, payMock, pool, stock, signMock, uid, loginAs } from "./helpers";
 
 test.describe("Shopping", () => {
-  test("1/7/18 guest checks out, payment succeeds, refresh does not duplicate", async ({ page }) => {
+  test("1/7/18 guest is asked to sign in at checkout, keeps the bag, pays; refresh does not duplicate", async ({ page }) => {
     const p = await createProduct({ M: 3 });
+    await page.goto("/");
+    await expect(page).not.toHaveURL(/login/); // browsing needs no account
     await addToBag(page, p.slug, "M");
     await page.getByRole("link", { name: "Checkout" }).click();
+    await page.waitForURL(/\/login\?next=%2Fcheckout|\/login\?next=\/checkout/);
+    await expect(page.getByText("Sign in to complete your order")).toBeVisible();
     await fillCheckout(page);
     await payMock(page, "Simulate success");
     await page.waitForURL(/checkout\/confirmation/);

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db";
-import { address, level, makeVariant, resetCookies } from "../support/factory";
+import { address, asShopper, level, makeVariant, resetCookies } from "../support/factory";
 import { testCookies } from "../support/integration-setup";
 import { addItem, getCartView } from "@/server/services/cart";
 import { placeOrder } from "@/server/services/checkout";
@@ -14,7 +14,7 @@ import { requirePermission } from "@/server/auth/session";
 import { login } from "@/server/services/auth";
 import { getGateway, MockGateway } from "@/server/payments";
 
-beforeEach(() => resetCookies());
+beforeEach(async () => { await asShopper(); });
 
 async function deliveredOrder(qty = 2) {
   const { variant } = await makeVariant(5);
@@ -79,6 +79,7 @@ describe("access control", () => {
   });
 
   it("enforces role permissions on the server", async () => {
+    resetCookies();
     await expect(requirePermission("orders.refund")).rejects.toMatchObject({ status: 401 });
     await login({ email: "fulfillment@qowl.test", password: "QowlStaff#2026dev" }, { ip: "t" });
     expect(testCookies.size).toBeGreaterThan(0);

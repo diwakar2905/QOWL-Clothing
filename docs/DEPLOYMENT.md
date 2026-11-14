@@ -31,3 +31,29 @@
 
 ## Scaling notes
 Rate limits and sessions are stored in Postgres, so multiple app instances work without Redis. Catalogue listing filters in memory after a visibility-scoped query — fine for hundreds of products; move filters into SQL before thousands.
+
+## Google sign-in (optional)
+
+Customers can use **Continue with Google** on the sign-in and sign-up pages. The button only appears when both variables are set.
+
+1. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), create or pick a project.
+2. **OAuth consent screen**: choose *External*, fill in the app name (QOWL), support email, logo and your domain. Scopes: `openid`, `email`, `profile` (all non-sensitive, so no Google review is needed). Publish the app when you go live; in *Testing* mode only listed test users can sign in.
+3. **Credentials → Create credentials → OAuth client ID → Web application.**
+   - Authorised JavaScript origin: your `APP_URL` (for example `https://qowl.in`, and `http://localhost:3000` for local work).
+   - Authorised redirect URI: `<APP_URL>/api/auth/google/callback` (for example `https://qowl.in/api/auth/google/callback`).
+4. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in the environment and restart.
+
+How accounts are matched:
+- A new Google user gets a verified account with no password (they can set one later with *Forgot password*).
+- An existing account with the same email is linked. If that account's email was never verified, its password is removed and its sessions are ended, because someone else may have registered it.
+- Staff accounts can't use Google; they keep using `/admin/login`.
+
+## Vercel
+
+`vercel.json` runs `prisma migrate deploy` before every build and schedules `/api/cron/jobs` once a day (Vercel sends `Authorization: Bearer $CRON_SECRET` automatically).
+
+1. **Database:** Vercel can't reach a database on your own computer. Create a hosted Postgres (Vercel → Storage → Neon). The integration sets `DATABASE_URL` (pooled, used by the app) and `DATABASE_URL_UNPOOLED` (direct, used by migrations, see `prisma.config.ts`). With another provider, set `DATABASE_URL` to the pooled URL and `DATABASE_URL_UNPOOLED` to the direct one, both with `?sslmode=require`. Set `DATABASE_POOL_SIZE=3` (each serverless instance opens its own pool).
+2. **Required variables** (Settings → Environment Variables, Production): `APP_URL` (e.g. `https://qowlclothing.vercel.app`), `DATABASE_URL`, `DATABASE_POOL_SIZE`, `SESSION_SECRET`, `CRON_SECRET`, `TRUST_PROXY=true`, payment (`PAYMENT_PROVIDER=razorpay` + Razorpay keys), `EMAIL_PROVIDER` (+ `RESEND_API_KEY`), storage (below), optional Google keys.
+3. **Uploads:** Vercel's disk is temporary, so admin image uploads need cloud storage. Easiest: **Cloudinary** — set `STORAGE_DRIVER=cloudinary` and `CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>` (Cloudinary Console → Settings → API Keys). Images are still validated, stripped of metadata and converted to WebP before upload; they're stored under `products/`, `cms/`, `collections/`, `reviews/` and `returns/`. AWS S3 / Cloudflare R2 also work with `STORAGE_DRIVER=s3`.
+4. **First data:** after the first deploy, run once from your computer against the hosted database: `npm run db:setup` with `DATABASE_URL` and `DATABASE_URL_UNPOOLED` set to the hosted URLs (it applies migrations, then seeds) (`SEED_FIXTURES=true` only for a demo store), or create an owner with `npm run admin:create`.
+5. **Background jobs** (expire unpaid orders, send queued emails, reconcile payments): the Hobby plan only allows daily crons. On Pro, change the schedule to `*/5 * * * *`; on Hobby, call `/api/cron/jobs` every 5 minutes from an external scheduler (e.g. cron-job.org) with the `Authorization: Bearer <CRON_SECRET>` header.

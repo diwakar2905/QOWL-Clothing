@@ -12,6 +12,15 @@ export const metadata: Metadata = { title: "Checkout", robots: { index: false } 
 export default async function CheckoutPage() {
   const [count, user, settings] = await Promise.all([getCartCount(), getCurrentUser(), getSettings()]);
   if (count === 0) redirect("/cart");
+  if (!user) redirect("/login?next=/checkout");
+  if (user.isStaff) {
+    return (
+      <Container className="max-w-xl py-16 text-center">
+        <h1 className="display text-5xl text-obsidian">Checkout</h1>
+        <p className="mt-6 text-sm text-charcoal/80">You&apos;re signed in with a staff account. Sign out and sign in with a customer account to place an order.</p>
+      </Container>
+    );
+  }
   const addresses = user && !user.isStaff ? await db.address.findMany({ where: { userId: user.id }, orderBy: [{ isDefault: "desc" }, { updatedAt: "desc" }] }) : [];
   const termsPublished = await db.page.count({ where: { slug: "terms-of-service", status: "ACTIVE" } });
   return (

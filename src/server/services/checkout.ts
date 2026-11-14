@@ -76,7 +76,10 @@ export async function placeOrder(input: CheckoutInput, ctx: { ip: string }): Pro
   await enforce(`checkout:ip:${ctx.ip}`, 20, 600, "Too many checkout attempts. Please wait a few minutes.");
   const data = checkoutSchema.parse(input);
   const user = await getCurrentUser();
-  const customerUserId = user && !user.isStaff ? user.id : null;
+  // Browsing and the bag are open to everyone; placing an order needs a customer account.
+  if (!user) throw new AppError("LOGIN_REQUIRED", "Please sign in to place your order.", 401);
+  if (user.isStaff) throw new AppError("CUSTOMER_ACCOUNT_REQUIRED", "Staff accounts can't place orders. Sign in with a customer account.", 403);
+  const customerUserId: string | null = user.id;
 
   // Refresh/double-submit safety: the same idempotency key returns the same order.
   const dup = await db.order.findUnique({ where: { idempotencyKey: data.idempotencyKey } });
