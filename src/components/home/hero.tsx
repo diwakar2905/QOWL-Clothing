@@ -39,7 +39,7 @@ export function Hero({ slides, autoplay, interval }: { slides: HeroSlideData[]; 
             {/* Full-bleed campaign image; a dark fade keeps the copy readable */}
             <HeroPicture desktop={s.desktopImageUrl} mobile={s.mobileImageUrl} alt={s.imageAlt} first={i === 0} />
             <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-t from-forest-deep/90 via-forest-deep/25 to-forest-deep/40 lg:bg-gradient-to-r lg:from-forest-deep/80 lg:via-forest-deep/20 lg:to-transparent" />
-            <div className="mx-auto grid min-h-[min(100svh,820px)] max-w-[1440px] lg:min-h-[56.25vw] grid-rows-[1fr_auto] px-5 pt-[84px] sm:px-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(160px,320px)_minmax(0,0.7fr)] lg:grid-rows-1 lg:px-12">
+            <div className="hero-fit mx-auto grid max-w-[1440px] grid-rows-[1fr_auto] px-5 pt-[84px] sm:px-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(160px,320px)_minmax(0,0.7fr)] lg:grid-rows-1 lg:px-12">
               <div className="relative z-10 flex flex-col justify-end pb-10 lg:order-1 lg:justify-center lg:pb-0">
                 {/* The first slide's eyebrow + heading form the page's single <h1> ("QOWL / Drop 001 — The Unwritten"); other slides use <h2>. */}
                 {(() => {
@@ -52,7 +52,7 @@ export function Hero({ slides, autoplay, interval }: { slides: HeroSlideData[]; 
                           <span aria-hidden className="h-px w-14 bg-ivory/60" />
                         </span>
                       )}
-                      <span className="display mt-5 block text-[3.6rem] leading-[0.9] sm:text-7xl lg:text-[min(5.2vw,5.4rem)] animate-rise [animation-delay:120ms]">
+                      <span className="display mt-5 block text-[clamp(2.5rem,12vw,3.6rem)] leading-[0.9] sm:text-7xl lg:text-[min(5.2vw,5.4rem)] animate-rise [animation-delay:120ms]">
                         <span className="sr-only">{s.eyebrow ? " — " : ""}</span>
                         {words.length > 1 ? (
                           <>
@@ -122,11 +122,16 @@ function HeroPicture({ desktop, mobile, alt, first }: { desktop: string; mobile:
     preload(desktop, { as: "image", imageSrcSet: desktopSet, imageSizes: "100vw", media: mobileSet ? "(min-width: 768px)" : undefined, fetchPriority: "high" });
   }
   return (
-    <picture className="pointer-events-none absolute inset-0 -z-10 block">
-      {mobileSet && <source media="(max-width: 767px)" srcSet={mobileSet} sizes="100vw" />}
-      <source media={mobileSet ? "(min-width: 768px)" : undefined} srcSet={desktopSet} sizes="100vw" />
-      {/* eslint-disable-next-line jsx-a11y/alt-text -- alt comes from getImageProps */}
-      <img {...img} className="object-cover object-[50%_30%] lg:object-top" />
-    </picture>
+    <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      {/* Frame keeps the photo's own aspect ratio at full hero height: on narrow
+          screens the sides are trimmed (model stays centred), on very wide screens
+          the photo edges fade into the green haze. Nothing is cut top or bottom. */}
+      <picture className={cn("hero-frame", mobileSet && "hero-frame-art")}>
+        {mobileSet && <source media="(max-width: 767px)" srcSet={mobileSet} sizes="100vw" />}
+        <source media={mobileSet ? "(min-width: 768px)" : undefined} srcSet={desktopSet} sizes="100vw" />
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- alt comes from getImageProps */}
+        <img {...img} className="object-cover" />
+      </picture>
+    </div>
   );
 }
