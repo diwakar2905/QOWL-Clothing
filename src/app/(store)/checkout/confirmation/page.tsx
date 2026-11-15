@@ -9,6 +9,7 @@ import { Sparkle } from "@/components/ui/icons";
 import { ButtonLink } from "@/components/ui/button";
 import { OrderDetail } from "@/components/orders/order-detail";
 import { PaymentPoller } from "@/components/orders/payment-poller";
+import { CartSync } from "@/components/checkout/cart-sync";
 
 export const metadata: Metadata = { title: "Order confirmation", robots: { index: false } };
 
@@ -24,6 +25,7 @@ export default async function ConfirmationPage({ searchParams }: { searchParams:
   const failed = order.status === "PAYMENT_FAILED" || order.status === "EXPIRED";
   return (
     <Container className="max-w-5xl py-10 sm:py-14">
+      <CartSync />
       <div className="mb-10 text-center">
         <Sparkle className="mx-auto h-5 w-5 text-forest" />
         <h1 className="display mt-4 text-5xl text-obsidian sm:text-6xl">{pending ? "Confirming payment" : failed ? "Payment not completed" : "Thank you"}</h1>

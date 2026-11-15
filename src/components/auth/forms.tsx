@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { submitKeepingValues } from "@/components/ui/action-form";
 import { Button } from "@/components/ui/button";
 import { Checkbox, FormMessage, Input } from "@/components/ui/form";
 import { forgotPasswordAction, loginAction, registerAction, resetPasswordAction, adminLoginAction, confirmEmailAction } from "@/server/actions/auth";
@@ -14,7 +15,7 @@ const formErr = (s: S) => (s && !s.ok && !s.error.fields ? s.error.message : nul
 export function LoginForm({ next, staff }: { next?: string; staff?: boolean }) {
   const [state, action, pending] = useActionState<S, FormData>(staff ? adminLoginAction : loginAction, null);
   return (
-    <form action={action} className="space-y-5" noValidate>
+    <form action={action} onSubmit={submitKeepingValues(action)} className="space-y-5" noValidate>
       <input type="hidden" name="next" value={next ?? ""} />
       <Input name="email" type="email" label="Email" autoComplete="email" required error={fieldErr(state, "email")} />
       <Input name="password" type="password" label="Password" autoComplete="current-password" required error={fieldErr(state, "password")} />
@@ -34,7 +35,7 @@ export function RegisterForm({ next, email }: { next?: string; email?: string })
   const [state, action, pending] = useActionState<S, FormData>(registerAction, null);
   if (state?.ok) return <FormMessage tone="success">{state.message}</FormMessage>;
   return (
-    <form action={action} className="space-y-5" noValidate>
+    <form action={action} onSubmit={submitKeepingValues(action)} className="space-y-5" noValidate>
       <input type="hidden" name="next" value={next ?? ""} />
       <Input name="name" label="Full name" autoComplete="name" required error={fieldErr(state, "name")} />
       <Input name="email" type="email" label="Email" autoComplete="email" defaultValue={email} required error={fieldErr(state, "email")} />
@@ -51,7 +52,7 @@ export function RegisterForm({ next, email }: { next?: string; email?: string })
 export function ConfirmEmailForm({ token }: { token: string }) {
   const [state, action, pending] = useActionState<S, FormData>(confirmEmailAction, null);
   return (
-    <form action={action} className="space-y-5">
+    <form action={action} onSubmit={submitKeepingValues(action)} className="space-y-5">
       <input type="hidden" name="token" value={token} />
       {formErr(state) && <FormMessage>{formErr(state)}</FormMessage>}
       <Button type="submit" className="w-full" size="lg" loading={pending}>Confirm email &amp; sign in</Button>
@@ -63,7 +64,7 @@ export function ForgotForm() {
   const [state, action, pending] = useActionState<S, FormData>(forgotPasswordAction, null);
   if (state?.ok) return <FormMessage tone="success">{state.message}</FormMessage>;
   return (
-    <form action={action} className="space-y-5" noValidate>
+    <form action={action} onSubmit={submitKeepingValues(action)} className="space-y-5" noValidate>
       <Input name="email" type="email" label="Email" autoComplete="email" required error={fieldErr(state, "_") ?? fieldErr(state, "email")} />
       {formErr(state) && <FormMessage>{formErr(state)}</FormMessage>}
       <Button type="submit" className="w-full" size="lg" loading={pending}>Send reset link</Button>
@@ -74,7 +75,7 @@ export function ForgotForm() {
 export function ResetForm({ token }: { token: string }) {
   const [state, action, pending] = useActionState<S, FormData>(resetPasswordAction, null);
   return (
-    <form action={action} className="space-y-5" noValidate>
+    <form action={action} onSubmit={submitKeepingValues(action)} className="space-y-5" noValidate>
       <input type="hidden" name="token" value={token} />
       <Input name="password" type="password" label="New password" autoComplete="new-password" required hint="At least 10 characters, with letters and a number or symbol." error={fieldErr(state, "_")} />
       <Input name="confirm" type="password" label="Confirm password" autoComplete="new-password" required error={fieldErr(state, "confirm")} />
