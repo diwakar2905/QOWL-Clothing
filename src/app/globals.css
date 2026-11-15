@@ -194,7 +194,7 @@
 .bag {
   position: relative; width: var(--bag-w); height: var(--bag-h);
   transform-style: preserve-3d;
-  animation: bag-spin 14s linear infinite;
+  animation: bag-spin 9s ease-in-out infinite;
 }
 .bag-face { position: absolute; inset: 0; backface-visibility: hidden; }
 .bag-front, .bag-back {
@@ -229,7 +229,12 @@
   border-radius: 50%; background: radial-gradient(closest-side, rgba(23, 23, 23, 0.22), transparent);
   animation: bag-shadow 6s ease-in-out infinite;
 }
-@keyframes bag-spin { from { transform: rotateX(-10deg) rotateY(0deg); } to { transform: rotateX(-10deg) rotateY(360deg); } }
+/* Gentle sway instead of a full spin: the bag never turns edge-on, so the
+   handles and the logo stay visible while the depth still shows. */
+@keyframes bag-spin {
+  0%, 100% { transform: rotateX(-10deg) rotateY(-40deg); }
+  50% { transform: rotateX(-10deg) rotateY(40deg); }
+}
 @keyframes bag-float { 0%, 100% { transform: translateY(-6px); } 50% { transform: translateY(6px); } }
 @keyframes bag-shadow { 0%, 100% { opacity: 0.7; scale: 0.9; } 50% { opacity: 1; scale: 1; } }
 @media (prefers-reduced-motion: reduce) {
