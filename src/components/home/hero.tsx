@@ -38,10 +38,10 @@ export function Hero({ slides, autoplay, interval }: { slides: HeroSlideData[]; 
             {/* Full-bleed campaign image; a dark fade keeps the copy readable */}
             <picture className="pointer-events-none absolute inset-0 -z-10 block">
               {s.mobileImageUrl && <source media="(max-width: 767px)" srcSet={s.mobileImageUrl} />}
-              <Image src={s.desktopImageUrl} alt={s.imageAlt} fill priority={i === 0} sizes="100vw" className="object-cover object-[50%_30%] lg:object-[50%_60%]" />
+              <Image src={s.desktopImageUrl} alt={s.imageAlt} fill priority={i === 0} sizes="100vw" className="object-cover object-[50%_30%] lg:object-top" />
             </picture>
             <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-t from-forest-deep/90 via-forest-deep/25 to-forest-deep/40 lg:bg-gradient-to-r lg:from-forest-deep/80 lg:via-forest-deep/20 lg:to-transparent" />
-            <div className="mx-auto grid min-h-[min(100svh,820px)] max-w-[1440px] lg:min-h-[min(100svh,56vw)] grid-rows-[1fr_auto] px-5 pt-[84px] sm:px-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(160px,320px)_minmax(0,0.7fr)] lg:grid-rows-1 lg:px-12">
+            <div className="mx-auto grid min-h-[min(100svh,820px)] max-w-[1440px] lg:min-h-[56.25vw] grid-rows-[1fr_auto] px-5 pt-[84px] sm:px-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(160px,320px)_minmax(0,0.7fr)] lg:grid-rows-1 lg:px-12">
               <div className="relative z-10 flex flex-col justify-end pb-10 lg:order-1 lg:justify-center lg:pb-0">
                 {s.eyebrow && (
                   <p className="label-wide flex items-center gap-4 text-ivory/90 animate-rise">
