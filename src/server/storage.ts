@@ -21,13 +21,13 @@ interface Driver {
 class LocalDriver implements Driver {
   constructor(private dir: string) {}
   async put(key: string, body: Buffer) {
-    const file = path.join(this.dir, key);
-    await mkdir(path.dirname(file), { recursive: true });
-    await writeFile(file, body);
+    const file = path.join(/* turbopackIgnore: true */ this.dir, key);
+    await mkdir(/* turbopackIgnore: true */ path.dirname(file), { recursive: true });
+    await writeFile(/* turbopackIgnore: true */ file, body);
     return `/media/${key}`;
   }
   async remove(key: string) {
-    await unlink(path.join(this.dir, key)).catch(() => {});
+    await unlink(/* turbopackIgnore: true */ path.join(/* turbopackIgnore: true */ this.dir, key)).catch(() => {});
   }
 }
 
@@ -93,10 +93,19 @@ class CloudinaryDriver implements Driver {
   }
 }
 
+/**
+ * Folder for the local storage driver (development / single persistent host).
+ * The path comes from the environment at runtime, so tell Turbopack not to
+ * trace it; otherwise the whole project gets bundled into the server output.
+ */
+function localRoot() {
+  return path.resolve(/* turbopackIgnore: true */ process.env.LOCAL_STORAGE_DIR ?? "./storage/uploads");
+}
+
 function driver(): Driver {
   if (process.env.STORAGE_DRIVER === "cloudinary") return new CloudinaryDriver();
   if (process.env.STORAGE_DRIVER === "s3") return new S3Driver(process.env.S3_BUCKET!, process.env.MEDIA_PUBLIC_BASE_URL!);
-  return new LocalDriver(path.resolve(process.env.LOCAL_STORAGE_DIR ?? "./storage/uploads"));
+  return new LocalDriver(localRoot());
 }
 
 /**
@@ -135,8 +144,8 @@ export async function deleteStoredImage(storageKey: string | null | undefined) {
 /** Local driver read (served by /media/[...key]); rejects path traversal. */
 export async function readLocal(key: string): Promise<Buffer | null> {
   if (!/^[a-z]+\/\d{4}-\d{2}\/[A-Za-z0-9_-]+\.webp$/.test(key)) return null;
-  const base = path.resolve(process.env.LOCAL_STORAGE_DIR ?? "./storage/uploads");
-  const file = path.resolve(base, key);
+  const base = localRoot();
+  const file = path.resolve(/* turbopackIgnore: true */ base, key);
   if (!file.startsWith(base + path.sep)) return null;
-  return readFile(file).catch(() => null);
+  return readFile(/* turbopackIgnore: true */ file).catch(() => null);
 }
