@@ -157,6 +157,87 @@
   .reveal { animation: var(--animate-rise); animation-timeline: view(); animation-range: entry 0% entry 35%; }
 }
 
+/* ───────────── Admin panel: calmer, rounder, less shouting ───────────── */
+.admin-ui .label,
+.admin-ui .label-wide {
+  text-transform: none;
+  letter-spacing: 0.005em;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.admin-ui :is(button, input:not([type="checkbox"]):not([type="radio"]), select, textarea),
+.admin-ui a[class*="h-9"], .admin-ui a[class*="h-11"] {
+  border-radius: 0.625rem;
+}
+.admin-ui :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
+  background-color: #fff;
+  border-color: rgba(23, 23, 23, 0.12);
+}
+.admin-ui :is(section, details, div, li).border.hairline:is(.bg-ivory, .bg-white\/40) {
+  border-radius: 0.875rem;
+  background-color: #fff;
+  border-color: rgba(23, 23, 23, 0.08);
+}
+.admin-ui .admin-table tbody tr { transition: background-color 0.15s; }
+.admin-ui .admin-table tbody tr:hover { background-color: #faf9f6; }
+.admin-ui details > summary { list-style: none; }
+.admin-ui details > summary::-webkit-details-marker { display: none; }
+
+/* ───────────── Footer: rotating QOWL shopping bag (CSS 3D) ───────────── */
+.bag-stage {
+  --bag-w: 118px; --bag-h: 156px; --bag-d: 46px;
+  position: relative; width: 220px; height: 250px;
+  display: flex; align-items: center; justify-content: center;
+  perspective: 900px;
+}
+.bag-float { animation: bag-float 6s ease-in-out infinite; transform-style: preserve-3d; }
+.bag {
+  position: relative; width: var(--bag-w); height: var(--bag-h);
+  transform-style: preserve-3d;
+  animation: bag-spin 14s linear infinite;
+}
+.bag-face { position: absolute; inset: 0; backface-visibility: hidden; }
+.bag-front, .bag-back {
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #ffffff 0%, #f5f2ea 60%, #e9e5da 100%);
+  box-shadow: inset 0 0 0 1px rgba(23, 23, 23, 0.06);
+}
+.bag-front { transform: translateZ(calc(var(--bag-d) / 2)); }
+.bag-back { transform: rotateY(180deg) translateZ(calc(var(--bag-d) / 2)); background: linear-gradient(200deg, #f7f4ec 0%, #ebe7dc 100%); }
+.bag-side {
+  width: var(--bag-d); left: calc((var(--bag-w) - var(--bag-d)) / 2);
+  background: linear-gradient(180deg, #e8e4d9 0%, #dcd7ca 100%);
+  /* the gusset fold */
+  background-image: linear-gradient(90deg, transparent 49%, rgba(23,23,23,0.08) 50%, transparent 51%), linear-gradient(180deg, #e8e4d9 0%, #d9d4c6 100%);
+}
+.bag-left { transform: rotateY(-90deg) translateZ(calc(var(--bag-w) / 2)); }
+.bag-right { transform: rotateY(90deg) translateZ(calc(var(--bag-w) / 2)); }
+.bag-top, .bag-bottom { height: var(--bag-d); top: calc((var(--bag-h) - var(--bag-d)) / 2); backface-visibility: visible; }
+.bag-top { transform: rotateX(90deg) translateZ(calc(var(--bag-h) / 2)); background: #2b2a27; }
+.bag-bottom { transform: rotateX(-90deg) translateZ(calc(var(--bag-h) / 2)); background: #d6d1c3; }
+.bag-handle {
+  position: absolute; left: 50%; top: -30px; width: 44px; height: 38px; translate: -50% 0;
+  border: 3px solid var(--color-forest); border-bottom: 0; border-radius: 22px 22px 0 0;
+}
+.bag-handle::before, .bag-handle::after {
+  content: ""; position: absolute; bottom: -9px; width: 6px; height: 6px; border-radius: 9999px; background: var(--color-forest);
+}
+.bag-handle::before { left: -4.5px; }
+.bag-handle::after { right: -4.5px; }
+.bag-logo { width: 46px; height: auto; opacity: 0.92; }
+.bag-shadow {
+  position: absolute; bottom: 18px; left: 50%; width: 130px; height: 18px; translate: -50% 0;
+  border-radius: 50%; background: radial-gradient(closest-side, rgba(23, 23, 23, 0.22), transparent);
+  animation: bag-shadow 6s ease-in-out infinite;
+}
+@keyframes bag-spin { from { transform: rotateX(-10deg) rotateY(0deg); } to { transform: rotateX(-10deg) rotateY(360deg); } }
+@keyframes bag-float { 0%, 100% { transform: translateY(-6px); } 50% { transform: translateY(6px); } }
+@keyframes bag-shadow { 0%, 100% { opacity: 0.7; scale: 0.9; } 50% { opacity: 1; scale: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .bag { animation: none; transform: rotateX(-10deg) rotateY(-28deg); }
+  .bag-float, .bag-shadow { animation: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;

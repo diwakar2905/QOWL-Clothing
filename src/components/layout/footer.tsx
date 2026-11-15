@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Logo } from "@/components/ui/misc";
 import type { Settings } from "@/server/services/settings";
 import { NewsletterBand } from "@/components/store/newsletter";
+import { FooterBag } from "./footer-bag";
 
 type FooterProps = {
   settings: Settings;
@@ -36,10 +37,15 @@ export function Footer({ settings, pages, categories, showNewsletter }: FooterPr
               )}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+          <div className="flex items-start gap-8">
+          <div className="grid flex-1 grid-cols-2 gap-8 sm:grid-cols-3">
             <FooterCol title="Shop" links={[{ href: "/new-in", label: "New In" }, { href: "/collections/drop-001", label: "Drop 001" }, ...categories.map((c) => ({ href: `/category/${c.slug}`, label: c.name })), { href: "/collections", label: "Collections" }, { href: "/lookbook", label: "Lookbook" }]} />
             <FooterCol title="Help" links={[{ href: "/orders/track", label: "Order tracking" }, ...help.map((p) => ({ href: `/pages/${p.slug}`, label: p.title })), { href: "/size-guide", label: "Size guide" }, { href: "/account/preferences", label: "Newsletter preferences" }]} />
             {social.length > 0 && <FooterCol title="Follow" links={social.map(([k, url]) => ({ href: url, label: labels[k] ?? k, external: true }))} />}
+          </div>
+          <div className="-my-6 hidden shrink-0 lg:block">
+            <FooterBag />
+          </div>
           </div>
         </div>
         <div className="mx-auto flex max-w-[1440px] flex-col gap-3 border-t hairline px-4 py-5 text-[12px] text-charcoal/70 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">

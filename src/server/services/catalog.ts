@@ -34,6 +34,8 @@ export type ProductCard = {
   sizes: string[];
   primaryImage: { url: string; alt: string; isConcept: boolean } | null;
   secondaryImage: { url: string; alt: string; isConcept: boolean } | null;
+  /** Up to 4 images for the card carousel (first = primary). */
+  images: { url: string; alt: string }[];
   inStock: boolean;
   createdAt: Date;
 };
@@ -55,6 +57,7 @@ export function toCard(p: CardRow, now = new Date()): ProductCard {
     sizes,
     primaryImage: imgs[0] ? { url: imgs[0].url, alt: imgs[0].alt, isConcept: imgs[0].isConcept } : null,
     secondaryImage: imgs[1] ? { url: imgs[1].url, alt: imgs[1].alt, isConcept: imgs[1].isConcept } : null,
+    images: imgs.slice(0, 4).map((i) => ({ url: i.url, alt: i.alt })),
     inStock: p.variants.some((v) => (v.inventory?.onHand ?? 0) - (v.inventory?.reserved ?? 0) > 0),
     createdAt: p.createdAt,
   };

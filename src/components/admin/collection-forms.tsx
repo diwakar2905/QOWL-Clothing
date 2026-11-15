@@ -1,5 +1,7 @@
 "use client";
 
+import { cn } from "@/lib/utils";
+
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ActionForm } from "@/components/ui/action-form";
@@ -52,7 +54,14 @@ export function CollectionProducts({ collectionId, selected, products }: { colle
     <div className="space-y-3 text-sm">
       <ol className="space-y-1">
         {ids.map((id, i) => { const p = products.find((x) => x.id === id); return (
-          <li key={id} className="flex items-center justify-between border hairline px-3 py-2"><span>{i + 1}. {p?.name}{p?.status !== "ACTIVE" && <span className="text-xs text-stone"> ({p?.status.toLowerCase()})</span>}</span><span className="flex gap-1"><button type="button" onClick={() => move(i, -1)} aria-label="Move up">↑</button><button type="button" onClick={() => move(i, 1)} aria-label="Move down">↓</button><button type="button" onClick={() => setIds((x) => x.filter((y) => y !== id))} className="text-danger" aria-label="Remove">×</button></span></li>
+          <li key={id} className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-2 ring-1 ring-charcoal/[0.08]">
+            <span className="min-w-0 truncate"><span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-cream text-xs tabular-nums text-charcoal/70">{i + 1}</span>{p?.name}{p?.status !== "ACTIVE" && <span className="text-xs text-stone"> ({p?.status.toLowerCase()})</span>}</span>
+            <span className="flex shrink-0 gap-1">
+              <button type="button" onClick={() => move(i, -1)} disabled={i === 0} aria-label={`Move ${p?.name ?? "product"} up`} className={REORDER_BTN}>↑</button>
+              <button type="button" onClick={() => move(i, 1)} disabled={i === ids.length - 1} aria-label={`Move ${p?.name ?? "product"} down`} className={REORDER_BTN}>↓</button>
+              <button type="button" onClick={() => setIds((x) => x.filter((y) => y !== id))} aria-label={`Remove ${p?.name ?? "product"}`} className={cn(REORDER_BTN, "text-danger hover:bg-danger/10")}>×</button>
+            </span>
+          </li>
         ); })}
       </ol>
       <select className="h-10 w-full border hairline bg-white/60 px-2" value="" onChange={(e) => e.target.value && setIds((x) => [...x, e.target.value])} aria-label="Add product">
@@ -63,3 +72,5 @@ export function CollectionProducts({ collectionId, selected, products }: { colle
     </div>
   );
 }
+
+const REORDER_BTN = "inline-flex h-8 w-8 items-center justify-center rounded-lg text-charcoal/70 hover:bg-cream hover:text-obsidian disabled:pointer-events-none disabled:opacity-30";
