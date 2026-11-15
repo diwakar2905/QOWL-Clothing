@@ -6,10 +6,10 @@ import { useStore } from "@/components/providers/store";
 import { ArrowRight } from "@/components/ui/icons";
 import type { NavLink } from "./header";
 
-export function MobileMenu({ open, onClose, links, secondary }: { open: boolean; onClose: () => void; links: NavLink[]; secondary: NavLink[] }) {
+export function MobileMenu({ open, onClose, links, secondary, side = "left" }: { open: boolean; onClose: () => void; links: NavLink[]; secondary: NavLink[]; side?: "left" | "right" }) {
   const { user } = useStore();
   return (
-    <Dialog open={open} onClose={onClose} title="Menu" variant="drawer" side="left">
+    <Dialog open={open} onClose={onClose} title="Menu" variant="drawer" side={side}>
       <nav aria-label="Menu" className="flex min-h-full flex-col px-6 py-6">
         <ul className="space-y-1">
           {links.map((l) => (
@@ -32,6 +32,12 @@ export function MobileMenu({ open, onClose, links, secondary }: { open: boolean;
           </li>
           <li>
             <Link href="/orders/track" onClick={onClose} className="link-underline">Track an order</Link>
+          </li>
+          <li>
+            <Link href="/our-story" onClick={onClose} className="link-underline">Our story</Link>
+          </li>
+          <li>
+            <Link href="/contact" onClick={onClose} className="link-underline">Contact us</Link>
           </li>
           {secondary.map((l) => (
             <li key={l.href}>
