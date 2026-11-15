@@ -63,11 +63,12 @@ export function Header({ links, secondary }: { links: NavLink[]; secondary: NavL
     <>
       <header
         className={cn(
-          "on-dark sticky top-0 z-50 transition-[background-color,box-shadow] duration-500",
+          // --header-h matches the bar's real height (68px mobile, 84px desktop) so the
+          // overlaid homepage hero starts exactly under the announcement bar.
+          "on-dark sticky top-0 z-50 transition-[background-color,box-shadow] duration-500 [--header-h:68px] lg:[--header-h:84px]",
           overlay && "-mb-[var(--header-h)]",
           transparent ? "bg-transparent" : "haze-soft shadow-[0_1px_0_rgba(247,244,236,0.08)]",
         )}
-        style={{ ["--header-h" as string]: "84px" }}
       >
         <div className="mx-auto grid h-[68px] max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center px-2 sm:px-4 lg:h-[84px] lg:px-8">
           <nav aria-label="Primary" className="flex items-center">
