@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { submitKeepingValues } from "@/components/ui/action-form";
 import { trackOrderAction } from "@/server/actions/orders";
 import { Input, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ export function TrackForm() {
   const data = state?.ok ? state.data : null;
   return (
     <>
-      <form action={action} className="mt-8 grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+      <form action={action} onSubmit={submitKeepingValues(action)} className="mt-8 grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
         <Input name="number" label="Order number" placeholder="QWL-000123" required autoCapitalize="characters" />
         <Input name="email" type="email" label="Email" autoComplete="email" required />
         <Button type="submit" loading={pending} className="h-12">Track</Button>

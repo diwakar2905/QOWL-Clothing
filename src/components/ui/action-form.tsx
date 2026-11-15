@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useActionState, useContext, useEffect, useRef, type ReactNode } from "react";
+import { createContext, startTransition, useActionState, useContext, useEffect, useRef, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "./button";
 import { FormMessage } from "./form";
@@ -10,6 +10,23 @@ import type { ActionResult } from "@/server/api";
 type Action = (prev: ActionResult<unknown> | null, form: FormData) => Promise<ActionResult<unknown>>;
 const FieldErrors = createContext<Record<string, string>>({});
 export const useFieldError = (name: string) => useContext(FieldErrors)[name];
+
+/**
+ * Submit handler that runs a form action WITHOUT React 19's automatic form
+ * reset. With `<form action={fn}>` React clears every field after the action
+ * finishes — including when it returns a validation error, which wipes what
+ * the user typed. Calling the action manually inside a transition keeps the
+ * values; the `action` attribute stays as the no-JavaScript fallback.
+ */
+export function submitKeepingValues(formAction: (fd: FormData) => void, confirmText?: string) {
+  return (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (confirmText && !window.confirm(confirmText)) return;
+    const submitter = (e.nativeEvent as SubmitEvent).submitter as HTMLElement | null;
+    const fd = new FormData(e.currentTarget, submitter && "form" in submitter ? (submitter as HTMLButtonElement) : undefined);
+    startTransition(() => formAction(fd));
+  };
+}
 
 /**
  * Progressive-enhancement form bound to a server action returning
@@ -59,9 +76,7 @@ export function ActionForm({
         action={formAction}
         className={className}
         noValidate
-        onSubmit={(e) => {
-          if (confirm && !window.confirm(confirm)) e.preventDefault();
-        }}
+        onSubmit={submitKeepingValues(formAction, confirm)}
       >
         {children}
         {state && !state.ok && (

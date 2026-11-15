@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useTransition, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/toast";
 import { ActionForm } from "@/components/ui/action-form";
 import { AInput, ASelect, ACheckbox } from "@/components/ui/fields";
 import { ActionButton } from "./client";
@@ -66,14 +68,14 @@ export function VariantsPanel({ productId, colors, variants }: { productId: stri
                 <tr key={v.id}>
                   <td className="px-4 py-2 font-medium">{v.size}</td>
                   <td colSpan={4} className="px-2 py-2">
-                    <form action={async (fd) => { await updateVariantAction(null, fd); }} className="grid grid-cols-[1.4fr_1fr_auto_1fr_auto] items-center gap-2">
+                    <VariantRowForm className="grid grid-cols-[1.4fr_1fr_auto_1fr_auto] items-center gap-2">
                       <input type="hidden" name="id" value={v.id} />
                       <input name="sku" defaultValue={v.sku} aria-label={`SKU for ${v.size}`} className="h-9 border hairline bg-white/60 px-2 font-mono text-xs" />
                       <input name="priceOverride" defaultValue={v.priceOverride != null ? paiseToRupeesString(v.priceOverride) : ""} placeholder="—" aria-label="Price override" className="h-9 border hairline bg-white/60 px-2" />
                       <input type="checkbox" name="isActive" defaultChecked={v.isActive} aria-label="Active" className="accent-forest" />
                       <span className="tabular-nums text-stone">{v.onHand} / {v.reserved}</span>
                       <button className="label border hairline px-2 py-1.5 hover:border-forest">Save</button>
-                    </form>
+                    </VariantRowForm>
                   </td>
                 </tr>
               ))}
@@ -136,5 +138,31 @@ export function ImagesPanel({ productId, images, colors }: { productId: string; 
       {images.length === 0 && <p className="text-sm text-stone">No images yet.</p>}
       <p className="text-xs text-stone">Uploads are validated, resized and re-encoded (metadata stripped). The first image is the primary listing image; the second appears on hover.</p>
     </div>
+  );
+}
+
+/** Inline variant editor row: keeps typed values and reports the result (errors used to be silently dropped). */
+function VariantRowForm({ className, children }: { className: string; children: ReactNode }) {
+  const [pending, start] = useTransition();
+  const { push } = useToast();
+  const router = useRouter();
+  return (
+    <form
+      className={className}
+      aria-busy={pending || undefined}
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        start(async () => {
+          const r = await updateVariantAction(null, fd);
+          if (r.ok) {
+            push("success", "Variant saved.");
+            router.refresh();
+          } else push("error", r.error.message);
+        });
+      }}
+    >
+      {children}
+    </form>
   );
 }
