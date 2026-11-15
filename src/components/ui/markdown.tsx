@@ -33,20 +33,49 @@ function inline(text: string, keyBase: string): ReactNode[] {
   return out;
 }
 
+type Block =
+  | { kind: "h2" | "h3"; text: string }
+  | { kind: "ul" | "ol" | "quote" | "p"; lines: string[] };
+
+/**
+ * Line-based block parser: a heading always ends at its line break, and a list
+ * or quote starts a new block even without a blank line before it (the way most
+ * people write Markdown).
+ */
+function parseBlocks(source: string): Block[] {
+  const blocks: Block[] = [];
+  let cur: Extract<Block, { lines: string[] }> | null = null;
+  const kindOf = (l: string): "ul" | "ol" | "quote" | "p" => (/^[-*] /.test(l) ? "ul" : /^\d+\. /.test(l) ? "ol" : /^> ?/.test(l) ? "quote" : "p");
+  for (const raw of source.replace(/\r\n/g, "\n").split("\n")) {
+    const l = raw.trim();
+    if (!l) { cur = null; continue; }
+    if (l.startsWith("### ")) { blocks.push({ kind: "h3", text: l.slice(4) }); cur = null; continue; }
+    if (l.startsWith("## ")) { blocks.push({ kind: "h2", text: l.slice(3) }); cur = null; continue; }
+    const k = kindOf(l);
+    if (!cur || cur.kind !== k) { cur = { kind: k, lines: [] }; blocks.push(cur); }
+    cur.lines.push(l);
+  }
+  return blocks;
+}
+
 export function Markdown({ source }: { source: string }) {
-  const blocks = source.replace(/\r\n/g, "\n").split(/\n{2,}/);
   return (
     <div className="space-y-4 text-[15px] leading-relaxed text-charcoal">
-      {blocks.map((b, bi) => {
-        const t = b.trim();
-        if (!t) return null;
-        if (t.startsWith("### ")) return <h3 key={bi} className="pt-2 font-serif text-2xl text-obsidian">{inline(t.slice(4), `h${bi}`)}</h3>;
-        if (t.startsWith("## ")) return <h2 key={bi} className="pt-4 font-serif text-3xl uppercase text-obsidian">{inline(t.slice(3), `h${bi}`)}</h2>;
-        if (t.startsWith("> ")) return <blockquote key={bi} className="border-l-2 border-forest bg-forest/5 px-4 py-3 text-sm">{inline(t.replace(/^> ?/gm, ""), `q${bi}`)}</blockquote>;
-        const lines = t.split("\n");
-        if (lines.every((l) => /^[-*] /.test(l))) return <ul key={bi} className="list-disc space-y-1 pl-6">{lines.map((l, li) => <li key={li}>{inline(l.slice(2), `u${bi}${li}`)}</li>)}</ul>;
-        if (lines.every((l) => /^\d+\. /.test(l))) return <ol key={bi} className="list-decimal space-y-1 pl-6">{lines.map((l, li) => <li key={li}>{inline(l.replace(/^\d+\. /, ""), `o${bi}${li}`)}</li>)}</ol>;
-        return <p key={bi}>{lines.flatMap((l, li) => (li ? [<br key={`br${li}`} />, ...inline(l, `p${bi}${li}`)] : inline(l, `p${bi}${li}`)))}</p>;
+      {parseBlocks(source).map((b, bi) => {
+        switch (b.kind) {
+          case "h3":
+            return <h3 key={bi} className="pt-2 font-serif text-2xl text-obsidian">{inline(b.text, `h${bi}`)}</h3>;
+          case "h2":
+            return <h2 key={bi} className="pt-4 font-serif text-3xl uppercase text-obsidian">{inline(b.text, `h${bi}`)}</h2>;
+          case "quote":
+            return <blockquote key={bi} className="border-l-2 border-forest bg-forest/5 px-4 py-3 text-sm">{inline(b.lines.map((l) => l.replace(/^> ?/, "")).join(" "), `q${bi}`)}</blockquote>;
+          case "ul":
+            return <ul key={bi} className="list-disc space-y-1 pl-6">{b.lines.map((l, li) => <li key={li}>{inline(l.slice(2), `u${bi}${li}`)}</li>)}</ul>;
+          case "ol":
+            return <ol key={bi} className="list-decimal space-y-1 pl-6">{b.lines.map((l, li) => <li key={li}>{inline(l.replace(/^\d+\. /, ""), `o${bi}${li}`)}</li>)}</ol>;
+          default:
+            return <p key={bi}>{b.lines.flatMap((l, li) => (li ? [<br key={`br${li}`} />, ...inline(l, `p${bi}${li}`)] : inline(l, `p${bi}${li}`)))}</p>;
+        }
       })}
     </div>
   );

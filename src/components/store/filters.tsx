@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { SlidersHorizontal, Loader2 } from "@/components/ui/icons";
+import { SortMenu } from "./sort-menu";
 
 type Facets = { sizes: string[]; colors: { name: string; hex: string; slug: string }[]; priceRange: [number, number] };
 
@@ -110,12 +111,7 @@ export function ListingToolbar({ facets, total, popularityAvailable, categoryTab
         {pending && <Loader2 className="h-4 w-4 animate-spin text-forest" aria-label="Updating results" />}
       </div>
       <div className="flex items-center gap-4">
-        <label className="flex items-center gap-2 text-sm">
-          <span className="text-charcoal/75">Sort by:</span>
-          <select value={sp.get("sort") ?? ""} onChange={(e) => update((p) => (e.target.value ? p.set("sort", e.target.value) : p.delete("sort")))} className="bg-transparent py-1 font-medium focus:outline-none">
-            {sortOptions.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
-          </select>
-        </label>
+        <SortMenu value={sp.get("sort") ?? ""} options={sortOptions} onChange={(v) => update((p) => (v ? p.set("sort", v) : p.delete("sort")))} />
         <span aria-hidden className="h-6 w-px bg-charcoal/20" />
         <button type="button" onClick={() => setOpen(true)} className="flex items-center gap-2 text-sm font-medium hover:text-forest" aria-haspopup="dialog">
           <SlidersHorizontal className="h-4 w-4" strokeWidth={1.4} /> Filter{activeCount ? ` (${activeCount})` : ""}

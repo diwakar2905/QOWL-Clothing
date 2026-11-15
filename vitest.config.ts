@@ -6,7 +6,7 @@ const resolve = { tsconfigPaths: true, alias: { "server-only": path.resolve("tes
 export default defineConfig({
   test: {
     projects: [
-      { resolve, test: { name: "unit", include: ["tests/unit/**/*.test.ts"], environment: "node" } },
+      { resolve, test: { name: "unit", include: ["tests/unit/**/*.test.ts", "tests/unit/**/*.test.tsx"], environment: "node" } },
       {
         resolve,
         test: {
