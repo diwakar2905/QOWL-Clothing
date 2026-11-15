@@ -6,6 +6,7 @@ import "@fontsource/cormorant-garamond/600.css";
 import "@fontsource/cormorant-garamond/400-italic.css";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
+import { SiteAnalytics } from "@/components/site-analytics";
 import { getSettings } from "@/server/services/settings";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to content
         </a>
         <ToastProvider>{children}</ToastProvider>
+        <SiteAnalytics />
       </body>
     </html>
   );
