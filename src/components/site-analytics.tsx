@@ -16,5 +16,8 @@ function scrub(event: BeforeSendEvent): BeforeSendEvent | null {
 }
 
 export function SiteAnalytics() {
+  // Only the deployed site reports; in development the debug script is
+  // blocked by our CSP and would only add console noise.
+  if (process.env.NODE_ENV !== "production") return null;
   return <Analytics beforeSend={scrub} />;
 }

@@ -13,6 +13,9 @@ import { CartDrawer } from "./cart-drawer";
 
 export type NavLink = { label: string; href: string };
 
+// The desktop bar stays minimal; the full list lives in the menu (☰).
+const TOP_BAR = new Set(["/new-in", "/collections"]);
+
 export function Header({ links, secondary }: { links: NavLink[]; secondary: NavLink[] }) {
   const pathname = usePathname();
   const overlay = pathname === "/";
@@ -69,8 +72,8 @@ export function Header({ links, secondary }: { links: NavLink[]; secondary: NavL
             <button type="button" className={cn(iconBtn, "lg:hidden")} aria-label="Open menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}>
               <Menu className="h-[22px] w-[22px]" strokeWidth={1.4} />
             </button>
-            <ul className="hidden items-center gap-4 lg:flex xl:gap-9">
-              {links.map((l) => (
+            <ul className="hidden items-center gap-9 lg:flex">
+              {links.filter((l) => TOP_BAR.has(l.href)).map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className={cn("link-underline whitespace-nowrap py-1 text-[13px] font-medium tracking-wide text-ivory", pathname === l.href && "bg-[length:100%_1px]")} aria-current={pathname === l.href ? "page" : undefined}>
                     {l.label}
