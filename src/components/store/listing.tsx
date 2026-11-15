@@ -18,6 +18,7 @@ export async function ProductListing({
   path,
   categoryTabs,
   extraEmpty,
+  after,
 }: {
   base: ListingFilters;
   searchParams: SearchParams;
@@ -28,6 +29,8 @@ export async function ProductListing({
   path: string;
   categoryTabs?: boolean;
   extraEmpty?: ReactNode;
+  /** Editorial copy rendered below the grid (category / collection page content). */
+  after?: ReactNode;
 }) {
   const parsed = parseListingParams(searchParams);
   const filters: ListingFilters = { ...base, ...parsed, category: parsed.category || base.category, perPage: 24 };
@@ -79,6 +82,7 @@ export async function ProductListing({
           )}
         </>
       )}
+    {after}
     </Container>
   );
 }

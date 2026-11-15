@@ -1,11 +1,11 @@
 "use client";
 
 import { ActionForm } from "@/components/ui/action-form";
-import { AInput, ACheckbox } from "@/components/ui/fields";
+import { ATextarea, AInput, ACheckbox } from "@/components/ui/fields";
 import { MediaField } from "./client";
 import { saveCategoryAction } from "@/server/actions/admin/catalog";
 
-type C = { id: string; name: string; slug: string; description: string | null; imageUrl: string | null; imageAlt: string | null; sortOrder: number; isActive: boolean; showOnHome: boolean; seoTitle: string | null; seoDescription: string | null };
+type C = { id: string; name: string; slug: string; description: string | null; content: string | null; imageUrl: string | null; imageAlt: string | null; sortOrder: number; isActive: boolean; showOnHome: boolean; seoTitle: string | null; seoDescription: string | null };
 
 export function CategoryForm({ data }: { data: C | null }) {
   return (
@@ -15,6 +15,7 @@ export function CategoryForm({ data }: { data: C | null }) {
       <AInput name="slug" label="Slug" defaultValue={data?.slug} />
       <AInput name="sortOrder" label="Sort order" type="number" defaultValue={String(data?.sortOrder ?? 0)} />
       <AInput name="description" label="Description" optional defaultValue={data?.description ?? ""} className="sm:col-span-2" />
+      <ATextarea name="content" label="Page content" optional rows={6} defaultValue={data?.content ?? ""} className="sm:col-span-2" hint="Shown below the products. Markdown: ## headings, **bold**, - lists, [links](/size-guide). Write for shoppers: fit, fabric, care, who it&apos;s for. Only verified facts." />
       <AInput name="imageAlt" label="Image alt" optional defaultValue={data?.imageAlt ?? ""} />
       <MediaField name="imageUrl" label="Image" defaultValue={data?.imageUrl} />
       <AInput name="seoTitle" label="SEO title" optional defaultValue={data?.seoTitle ?? ""} />

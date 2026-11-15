@@ -11,8 +11,9 @@ import { RecentlyViewed } from "@/components/product/recently-viewed";
 import { ProductCard } from "@/components/store/product-card";
 import { formatINR } from "@/lib/money";
 import { formatDate } from "@/lib/utils";
+import { absoluteUrl, metaDescription, productLd, productTitle, storeFacts } from "@/lib/seo";
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ preview?: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ preview?: string; color?: string; size?: string }> };
 
 async function load(slug: string, preview: boolean) {
   if (preview) {
@@ -22,23 +23,35 @@ async function load(slug: string, preview: boolean) {
   return getProductDetail(slug);
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const p = await getProductDetail((await params).slug);
-  if (!p) return { title: "Product not found" };
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const preview = (await searchParams).preview === "1";
+  const p = await load(slug, preview);
+  // The page itself returns the 404; here we only make sure a missing product is never indexable.
+  if (!p) return { title: "Product not found", robots: { index: false, follow: false } };
   const img = p.images[0];
+  const title = productTitle(p);
+  const description = p.seoDescription || metaDescription(p.description);
   return {
-    title: p.seoTitle ?? `${p.name} — ${p.subtitle ?? p.category.name}`,
-    description: p.seoDescription ?? p.description.slice(0, 160),
+    title,
+    description,
+    // Colour/size query params preselect options but always canonicalise to the product.
     alternates: { canonical: `/products/${p.slug}` },
-    openGraph: { type: "website", title: p.name, description: p.seoDescription ?? p.description.slice(0, 160), images: img ? [{ url: img.url, alt: img.alt }] : undefined },
+    ...(preview ? { robots: { index: false, follow: false } } : {}),
+    openGraph: { type: "website", title: `${title} | QOWL`, description, url: absoluteUrl(`/products/${p.slug}`), images: img ? [{ url: img.url, alt: img.alt }] : undefined },
+    twitter: { card: "summary_large_image", title: `${title} | QOWL`, description, images: img ? [img.url] : undefined },
   };
 }
 
 export default async function ProductPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const preview = (await searchParams).preview === "1";
-  const [p, settings] = await Promise.all([load(slug, preview), getSettings()]);
+  const sp = await searchParams;
+  const preview = sp.preview === "1";
+  // Resolve the product before anything else so notFound() runs before the
+  // response starts streaming: crawlers get a real 404, not a soft 404.
+  const p = await load(slug, preview);
   if (!p) notFound();
+  const settings = await getSettings();
   const primaryCollection = p.visibleCollections.find((c) => c.slug === "drop-001") ?? p.visibleCollections[0];
   const [related, siblingsAll] = await Promise.all([relatedProducts(p.id, p.categoryId, 3), primaryCollection ? collectionSiblings(primaryCollection.slug, p.id, 8) : Promise.resolve([])]);
   const siblings = siblingsAll.filter((s) => !related.some((r) => r.id === s.id)).slice(0, 4);
@@ -69,29 +82,10 @@ export default async function ProductPage({ params, searchParams }: Props) {
 
   // Story pairs the most specific artwork detail with the most specific fabric close-up.
   const storyImages = [p.images.filter((i) => i.kind === "DETAIL").at(-1), p.images.filter((i) => i.kind === "FABRIC").at(-1)].filter((x): x is NonNullable<typeof x> => !!x);
-  const inStock = p.variants.some((v) => v.available > 0);
-  const base = process.env.APP_URL ?? "http://localhost:3000";
-  const ld = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: p.name,
-    description: p.description,
-    sku: p.styleCode,
-    brand: { "@type": "Brand", name: "QOWL" },
-    image: p.images.slice(0, 5).map((i) => (i.url.startsWith("http") ? i.url : `${base}${i.url}`)),
-    category: p.category.name,
-    ...(p.countryOfOrigin ? { countryOfOrigin: p.countryOfOrigin } : {}),
-    offers: {
-      "@type": "AggregateOffer",
-      priceCurrency: "INR",
-      lowPrice: (Math.min(...p.variants.map((v) => v.price), p.effectivePrice) / 100).toFixed(2),
-      highPrice: (Math.max(...p.variants.map((v) => v.price), p.effectivePrice) / 100).toFixed(2),
-      offerCount: p.variants.length,
-      availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      url: `${base}/products/${p.slug}`,
-    },
-    ...(p.rating ? { aggregateRating: { "@type": "AggregateRating", ratingValue: p.rating.average, reviewCount: p.rating.count } } : {}),
-  };
+  const ld = productLd(p, storeFacts(settings));
+  // ?color=<slug>&size=<size> (used by structured data and the Merchant feed) preselects the variant.
+  const initialColorId = p.colors.find((c) => c.slug === sp.color)?.id ?? null;
+  const initialSize = sp.size && p.variants.some((v) => v.size === sp.size && (!initialColorId || v.colorId === initialColorId)) ? sp.size : null;
 
   const disclosures: [string, string | null | undefined][] = [
     ["Style code", p.styleCode],
@@ -113,7 +107,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
       <Container className="pb-28 pt-5 lg:pb-16">
         <Breadcrumbs items={[{ label: "Home", href: "/" }, ...(primaryCollection ? [{ label: primaryCollection.title.split(" / ")[0]!, href: `/collections/${primaryCollection.slug}` }] : [{ label: p.category.name, href: `/category/${p.category.slug}` }]), { label: p.name }]} />
         <div className="mt-5">
-          <ProductView p={data} conceptNotice={settings.launch.conceptImageNotice} codEnabled={settings.payments.codEnabled} returnsSummary={settings.returns.policySummary || null} />
+          <ProductView p={data} initialColorId={initialColorId} initialSize={initialSize} conceptNotice={settings.launch.conceptImageNotice} codEnabled={settings.payments.codEnabled} returnsSummary={settings.returns.policySummary || null} />
         </div>
 
         {p.story && (

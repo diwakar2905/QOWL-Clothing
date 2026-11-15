@@ -142,6 +142,8 @@ model Category {
   name           String
   slug           String     @unique
   description    String?
+  // Long-form page copy (Markdown) shown below the product grid.
+  content        String?
   imageUrl       String?
   mobileImageUrl String?
   imageAlt       String?
@@ -329,6 +331,8 @@ model Collection {
   slug           String              @unique
   eyebrow        String?
   description    String?
+  // Long-form page copy (Markdown) shown below the product grid.
+  content        String?
   heroImageUrl   String?
   mobileImageUrl String?
   imageAlt       String?

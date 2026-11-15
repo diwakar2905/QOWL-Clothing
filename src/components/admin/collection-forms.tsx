@@ -11,7 +11,7 @@ import { useToast } from "@/components/ui/toast";
 import { MediaField } from "./client";
 import { saveCollectionAction, setCollectionProductsAction } from "@/server/actions/admin/catalog";
 
-type Data = { id: string; title: string; slug: string; eyebrow: string; description: string; heroImageUrl: string; mobileImageUrl: string; imageAlt: string; type: "MANUAL" | "RULE"; linkType: "PRODUCTS" | "EDITORIAL"; editorialHref: string; ruleCategories: string; ruleTags: string; sortOrder: string; showInExplore: boolean; seoTitle: string; seoDescription: string };
+type Data = { id: string; title: string; slug: string; eyebrow: string; description: string; content: string; heroImageUrl: string; mobileImageUrl: string; imageAlt: string; type: "MANUAL" | "RULE"; linkType: "PRODUCTS" | "EDITORIAL"; editorialHref: string; ruleCategories: string; ruleTags: string; sortOrder: string; showInExplore: boolean; seoTitle: string; seoDescription: string };
 
 export function CollectionForm({ data, categories }: { data: Data | null; categories: { slug: string; name: string }[] }) {
   const [type, setType] = useState(data?.type ?? "MANUAL");
@@ -24,6 +24,7 @@ export function CollectionForm({ data, categories }: { data: Data | null; catego
       <AInput name="eyebrow" label="Eyebrow label" optional defaultValue={data?.eyebrow} />
       <AInput name="sortOrder" label="Sort order" type="number" defaultValue={data?.sortOrder ?? "0"} />
       <ATextarea name="description" label="Description" optional defaultValue={data?.description} className="sm:col-span-2" rows={2} />
+      <ATextarea name="content" label="Page content" optional defaultValue={data?.content} className="sm:col-span-2" rows={6} hint="Shown below the products. Markdown: ## headings, **bold**, - lists, [links](/size-guide). Write for shoppers: fit, fabric, care, who it&apos;s for. Only verified facts." />
       <MediaField name="heroImageUrl" label="Tile / hero image" defaultValue={data?.heroImageUrl} folder="collections" />
       <MediaField name="mobileImageUrl" label="Mobile image (optional)" defaultValue={data?.mobileImageUrl} folder="collections" />
       <AInput name="imageAlt" label="Image alt text" defaultValue={data?.imageAlt} className="sm:col-span-2" />

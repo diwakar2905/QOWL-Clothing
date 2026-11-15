@@ -8,12 +8,21 @@ import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 import { SiteAnalytics } from "@/components/site-analytics";
 import { getSettings } from "@/server/services/settings";
+import { headers } from "next/headers";
+import { isIndexable, siteUrl } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings().catch(() => null);
-  const base = process.env.APP_URL ?? "http://localhost:3000";
+  const base = siteUrl();
+  const indexable = isIndexable((await headers()).get("host"));
+  const verification = {
+    ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
+    ...(process.env.BING_SITE_VERIFICATION ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } } : {}),
+  };
   return {
     metadataBase: new URL(base),
+    robots: indexable ? { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } } : { index: false, follow: false },
+    ...(Object.keys(verification).length ? { verification } : {}),
     title: { default: s?.seo.defaultTitle ?? "QOWL", template: s?.seo.titleTemplate ?? "%s | QOWL" },
     description: s?.seo.defaultDescription,
     applicationName: "QOWL",

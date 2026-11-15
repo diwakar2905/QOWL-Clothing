@@ -31,9 +31,9 @@ export function ProductShowcase({ data, products }: { data: SectionData<"PRODUCT
         <SectionHeading eyebrow={data.eyebrow || undefined} title={data.heading} subtitle={data.subheading || undefined} />
       </div>
       <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 lg:gap-6">
-        {products.map((p, i) => (
+        {products.map((p) => (
           <div key={p.id}>
-            <ProductCard product={p} variant="overlay" priority={i < 3} sizes="(max-width: 1024px) 50vw, 33vw" />
+            <ProductCard product={p} variant="overlay" sizes="(max-width: 1024px) 50vw, 33vw" />
           </div>
         ))}
       </div>

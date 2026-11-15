@@ -3,7 +3,11 @@ import { db } from "@/lib/db";
 import { Breadcrumbs, Container, EmptyState } from "@/components/ui/misc";
 import { SizeTable } from "@/components/store/size-table";
 
-export const metadata: Metadata = { title: "Size guide", alternates: { canonical: "/size-guide" } };
+export async function generateMetadata(): Promise<Metadata> {
+  const approved = await db.sizeGuide.count({ where: { isApproved: true } });
+  // A "coming soon" page is thin content: keep it out of the index until measurements are published.
+  return { title: "Size guide", description: "Garment measurements for QOWL oversized T-shirts and hoodies.", alternates: { canonical: "/size-guide" }, ...(approved ? {} : { robots: { index: false, follow: true } }) };
+}
 
 export default async function SizeGuidePage() {
   const guides = await db.sizeGuide.findMany({ where: { isApproved: true }, orderBy: { name: "asc" } });

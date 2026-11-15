@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { listingCanonical } from "@/lib/seo";
 import { ProductListing } from "@/components/store/listing";
 import type { SearchParams } from "@/components/store/listing-params";
 
-export const metadata: Metadata = { title: "New In", description: "The latest QOWL releases.", alternates: { canonical: "/new-in" } };
+export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchParams> }): Promise<Metadata> {
+  return { title: "New In", description: "The latest QOWL releases.", alternates: { canonical: listingCanonical("/new-in", await searchParams) } };
+}
 
 export default async function NewInPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (
