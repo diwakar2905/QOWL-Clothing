@@ -36,12 +36,12 @@ export type PdpData = {
 const ICONS = { fabric: Layers, fit: Shirt, detail: Scissors, care: RefreshCw };
 const RV_KEY = "qowl.recent.v1";
 
-export function ProductView({ p, conceptNotice, codEnabled, returnsSummary }: { p: PdpData; conceptNotice: string; codEnabled: boolean; returnsSummary: string | null }) {
+export function ProductView({ p, conceptNotice, codEnabled, returnsSummary, initialColorId = null, initialSize = null }: { p: PdpData; conceptNotice: string; codEnabled: boolean; returnsSummary: string | null; initialColorId?: string | null; initialSize?: string | null }) {
   const router = useRouter();
   const { addToCart, wishlist, toggleWishlist } = useStore();
   const firstAvailableColor = p.colors.find((c) => p.variants.some((v) => v.colorId === c.id && v.available > 0)) ?? p.colors[0];
-  const [colorId, setColorId] = useState(firstAvailableColor?.id ?? "");
-  const [size, setSize] = useState<string | null>(null);
+  const [colorId, setColorId] = useState(initialColorId ?? firstAvailableColor?.id ?? "");
+  const [size, setSize] = useState<string | null>(initialSize);
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState<"add" | "buy" | null>(null);
   const [sizeError, setSizeError] = useState<string | null>(null);

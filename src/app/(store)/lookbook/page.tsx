@@ -4,7 +4,10 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { Breadcrumbs, ConceptBadge, Container, EmptyState, SectionHeading } from "@/components/ui/misc";
 
-export const metadata: Metadata = { title: "Lookbook", description: "The Unwritten Journal — a visual exploration of QOWL Drop 001.", alternates: { canonical: "/lookbook" } };
+export async function generateMetadata(): Promise<Metadata> {
+  const count = await db.lookbookImage.count({ where: { isActive: true } });
+  return { title: "Lookbook", description: "The Unwritten Journal: a visual exploration of QOWL Drop 001.", alternates: { canonical: "/lookbook" }, ...(count ? {} : { robots: { index: false, follow: true } }) };
+}
 
 export default async function LookbookPage() {
   const images = await db.lookbookImage.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" }, include: { product: { select: { slug: true, name: true, status: true } } } });

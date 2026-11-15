@@ -19,6 +19,22 @@ if (cloudName) remotePatterns.push({ protocol: "https", hostname: "res.cloudinar
 
 const isProd = process.env.NODE_ENV === "production";
 
+// Search indexing: only the production host (APP_URL) may be indexed. Vercel
+// preview URLs, staging and any other host get X-Robots-Tag: noindex, which —
+// unlike a robots.txt Disallow — also keeps already-discovered URLs out of results.
+const appHost = (() => {
+  try {
+    return process.env.APP_URL ? new URL(process.env.APP_URL).host : "";
+  } catch {
+    return "";
+  }
+})();
+const blockAllIndexing = process.env.ALLOW_INDEXING === "false" || (!!process.env.VERCEL_ENV && process.env.VERCEL_ENV !== "production") || !appHost;
+const NOINDEX = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
+const noindexRules: { source: string; headers: { key: string; value: string }[]; missing?: { type: "host"; value: string }[] }[] = blockAllIndexing
+  ? [{ source: "/:path*", headers: NOINDEX }]
+  : [{ source: "/:path*", missing: [{ type: "host", value: appHost.replace(/\./g, "\\.") }], headers: NOINDEX }];
+
 // Content Security Policy. Razorpay Checkout requires its script, frame and API
 // origins. 'unsafe-inline' for scripts is needed by Next's inline bootstrap
 // without per-request nonces (which would force every page to render
@@ -63,9 +79,21 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: { bodySizeLimit: "12mb" },
   },
+  // Crawlers get fully-resolved <head> metadata and the final status code (e.g. a real
+  // 404 for a removed product) instead of a streamed response that starts as 200.
+  htmlLimitedBots: /Googlebot|Google-InspectionTool|Storebot-Google|AdsBot-Google|bingbot|BingPreview|DuckDuckBot|YandexBot|Baiduspider|Applebot|OAI-SearchBot|ChatGPT-User|PerplexityBot|Perplexity-User|Claude-SearchBot|Claude-User|facebookexternalhit|Twitterbot|LinkedInBot|WhatsApp|Slackbot|Discordbot/i,
+  async redirects() {
+    // Common brand-page paths people (and crawlers) guess.
+    return [
+      { source: "/about", destination: "/our-story", permanent: true },
+      { source: "/about-us", destination: "/our-story", permanent: true },
+      { source: "/contact-us", destination: "/contact", permanent: true },
+    ];
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      ...noindexRules,
       { source: "/admin/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }, { key: "Cache-Control", value: "no-store" }] },
       { source: "/account/:path*", headers: [{ key: "Cache-Control", value: "no-store" }] },
     ];

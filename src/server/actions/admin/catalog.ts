@@ -15,6 +15,7 @@ import { publishBlockers } from "@/server/services/catalog-admin";
 import { storeImage, deleteStoredImage } from "@/server/storage";
 import { str, opt, bool, intOrNull, paise, istDate, list } from "./_util";
 import { isRenderableImageUrl } from "@/lib/utils";
+import { pingIndexNow } from "@/lib/indexnow";
 
 const optImage = (v: string | null) => {
   if (v && !isRenderableImageUrl(v)) throw new AppError("VALIDATION", "Images must be uploaded or use a /path or media-CDN URL.");
@@ -101,6 +102,7 @@ export async function updateProductAction(_p: unknown, form: FormData) {
     await audit({ actorId: u.id, action: "product.update", entityType: "Product", entityId: id, before: { price: before.price, mrp: before.mrp, salePrice: before.salePrice, status: before.status }, after: { price: data.price, mrp: data.mrp, salePrice: data.salePrice } });
     revalidatePath(`/admin/products/${id}`);
     revalidatePath(`/products/${data.slug}`);
+    if (before.status === "ACTIVE") pingIndexNow([`/products/${data.slug}`, ...(before.slug !== data.slug ? [`/products/${before.slug}`] : [])]);
   }, "Product saved.");
 }
 
@@ -120,6 +122,8 @@ export async function setProductStatusAction(id: string, status: "DRAFT" | "ACTI
     await audit({ actorId: u.id, action: "product.status", entityType: "Product", entityId: id, before: { status: p.status }, after: { status, publishAt } });
     revalidatePath("/admin/products");
     revalidatePath(`/admin/products/${id}`);
+    // Published, unpublished or archived: either way engines should recrawl (new page, or now a 404).
+    if (status !== p.status) pingIndexNow([`/products/${p.slug}`]);
   }, status === "ACTIVE" ? "Product published." : `Product set to ${status.toLowerCase()}.`);
 }
 
@@ -263,6 +267,7 @@ export async function saveCollectionAction(_p: unknown, form: FormData) {
       slug: z.string().regex(slugRe, "Use lowercase letters, numbers and dashes").parse(str(form, "slug") || slugify(title)),
       eyebrow: opt(form, "eyebrow"),
       description: opt(form, "description"),
+      content: opt(form, "content"),
       heroImageUrl: optImage(opt(form, "heroImageUrl")),
       mobileImageUrl: optImage(opt(form, "mobileImageUrl")),
       imageAlt: opt(form, "imageAlt"),
@@ -289,8 +294,9 @@ export async function setCollectionStatusAction(id: string, status: "DRAFT" | "A
     const u = await requirePermission("catalog.publish");
     const fd = new FormData();
     if (publishAtRaw) fd.set("publishAt", publishAtRaw);
-    await db.collection.update({ where: { id }, data: { status, publishAt: status === "ACTIVE" ? istDate(fd, "publishAt") : null } });
+    const c = await db.collection.update({ where: { id }, data: { status, publishAt: status === "ACTIVE" ? istDate(fd, "publishAt") : null } });
     await audit({ actorId: u.id, action: "collection.status", entityType: "Collection", entityId: id, after: { status } });
+    pingIndexNow([`/collections/${c.slug}`, "/collections"]);
     revalidatePath(`/admin/collections/${id}`);
   }, "Status updated.");
 }
@@ -318,6 +324,7 @@ export async function saveCategoryAction(_p: unknown, form: FormData) {
       name,
       slug: z.string().regex(slugRe).parse(str(form, "slug") || slugify(name)),
       description: opt(form, "description"),
+      content: opt(form, "content"),
       imageUrl: optImage(opt(form, "imageUrl")),
       imageAlt: opt(form, "imageAlt"),
       sortOrder: intOrNull(form, "sortOrder") ?? 0,

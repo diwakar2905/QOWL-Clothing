@@ -9,12 +9,15 @@ export function FooterBag() {
     <div aria-hidden className="bag-stage">
       <div className="bag-float">
         <div className="bag">
+          <span className="bag-handle bag-handle-front" />
+          <span className="bag-handle bag-handle-back" />
+          {/* Rope profiles: edge-on from the front, solid loops when the bag is side-on */}
+          <span className="bag-handle bag-handle-edge bag-handle-front-edge" />
+          <span className="bag-handle bag-handle-edge bag-handle-back-edge" />
           <div className="bag-face bag-front">
-            <span className="bag-handle" />
             <Image src="/brand/logo-forest.png" alt="" width={435} height={705} className="bag-logo" />
           </div>
           <div className="bag-face bag-back">
-            <span className="bag-handle" />
             <Image src="/brand/logo-forest.png" alt="" width={435} height={705} className="bag-logo" />
           </div>
           <div className="bag-face bag-side bag-left" />

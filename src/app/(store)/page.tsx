@@ -4,13 +4,17 @@ import { Campaign, CategoryTiles, Craft, LookbookTeaser, Marquee, ProductShowcas
 import { parseSectionData } from "@/server/cms/sections";
 import { JsonLd } from "@/components/ui/misc";
 import { getSettings } from "@/server/services/settings";
+import type { Metadata } from "next";
+import { graph, organizationLd, storeFacts, websiteLd } from "@/lib/seo";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export default async function HomePage() {
   const [sections, settings] = await Promise.all([resolveHomepage(), getSettings()]);
-  const base = process.env.APP_URL ?? "http://localhost:3000";
+  const facts = storeFacts(settings);
   return (
     <>
-      <JsonLd data={{ "@context": "https://schema.org", "@type": "Organization", name: settings.store.legalName || "QOWL", url: base, logo: `${base}/brand/icon-512.png`, sameAs: Object.values(settings.social).filter(Boolean) }} />
+      <JsonLd data={graph(organizationLd(facts), websiteLd(facts))} />
       {sections[0]?.type !== "HERO" && <div aria-hidden className="haze h-[68px] lg:h-[84px]" />}
       {sections.map((s) => {
         switch (s.type) {

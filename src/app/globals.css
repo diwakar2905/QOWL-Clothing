@@ -215,15 +215,25 @@
 .bag-top, .bag-bottom { height: var(--bag-d); top: calc((var(--bag-h) - var(--bag-d)) / 2); backface-visibility: visible; }
 .bag-top { transform: rotateX(90deg) translateZ(calc(var(--bag-h) / 2)); background: #2b2a27; }
 .bag-bottom { transform: rotateX(-90deg) translateZ(calc(var(--bag-h) / 2)); background: #d6d1c3; }
+/* Handles are their own 3D pieces (not painted on a face), lean slightly
+   outward and render from both sides, so both stay visible at every angle. */
 .bag-handle {
-  position: absolute; left: 50%; top: -30px; width: 44px; height: 38px; translate: -50% 0;
-  border: 3px solid var(--color-forest); border-bottom: 0; border-radius: 22px 22px 0 0;
+  position: absolute; left: calc(50% - 23px); top: -34px; width: 46px; height: 40px;
+  border: 3.5px solid var(--color-forest); border-bottom: 0; border-radius: 23px 23px 0 0;
+  transform-origin: 50% 100%;
+  backface-visibility: visible;
 }
+.bag-handle-front { transform: translateZ(calc(var(--bag-d) / 2 - 6px)) rotateX(-14deg); }
+.bag-handle-back { transform: translateZ(calc(var(--bag-d) / -2 + 6px)) rotateX(14deg); border-color: #0d4a37; }
+.bag-handle-edge { left: calc(50% - 4px); width: 8px; border-width: 3px; border-radius: 4px 4px 0 0; }
+.bag-handle-edge::before, .bag-handle-edge::after { display: none; }
+.bag-handle-front-edge { transform: translateZ(calc(var(--bag-d) / 2 - 6px)) rotateX(-14deg) rotateY(90deg); }
+.bag-handle-back-edge { transform: translateZ(calc(var(--bag-d) / -2 + 6px)) rotateX(14deg) rotateY(90deg); border-color: #0d4a37; }
 .bag-handle::before, .bag-handle::after {
-  content: ""; position: absolute; bottom: -9px; width: 6px; height: 6px; border-radius: 9999px; background: var(--color-forest);
+  content: ""; position: absolute; bottom: -8px; width: 7px; height: 7px; border-radius: 9999px; background: currentColor; color: var(--color-forest);
 }
-.bag-handle::before { left: -4.5px; }
-.bag-handle::after { right: -4.5px; }
+.bag-handle::before { left: -5px; }
+.bag-handle::after { right: -5px; }
 .bag-logo { width: 46px; height: auto; opacity: 0.92; }
 .bag-shadow {
   position: absolute; bottom: 18px; left: 50%; width: 130px; height: 18px; translate: -50% 0;
