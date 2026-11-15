@@ -69,9 +69,9 @@ export const settingsSchemas = {
     reviewedByAdvisor: z.boolean().default(false),
   }),
   seo: z.object({
-    defaultTitle: z.string().default("QOWL — Wear Your Own Code"),
-    titleTemplate: z.string().default("%s — QOWL"),
-    defaultDescription: z.string().default("QOWL is an independent Indian streetwear label. Explore DROP 001 — The Unwritten."),
+    defaultTitle: z.string().default("QOWL | Wear Your Own Code"),
+    titleTemplate: z.string().default("%s | QOWL"),
+    defaultDescription: z.string().default("QOWL is an independent Indian streetwear label. Explore Drop 001: The Unwritten."),
     ogImageUrl: z.string().default(""),
   }),
   newsletter: z.object({

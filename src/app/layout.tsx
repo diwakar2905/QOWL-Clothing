@@ -14,10 +14,17 @@ export async function generateMetadata(): Promise<Metadata> {
   const base = process.env.APP_URL ?? "http://localhost:3000";
   return {
     metadataBase: new URL(base),
-    title: { default: s?.seo.defaultTitle ?? "QOWL", template: s?.seo.titleTemplate ?? "%s — QOWL" },
+    title: { default: s?.seo.defaultTitle ?? "QOWL", template: s?.seo.titleTemplate ?? "%s | QOWL" },
     description: s?.seo.defaultDescription,
     applicationName: "QOWL",
-    icons: { icon: "/brand/favicon-48.png", apple: "/brand/apple-touch-icon.png" },
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/brand/favicon-48.png", type: "image/png", sizes: "48x48" },
+        { url: "/brand/icon-192.png", type: "image/png", sizes: "192x192" },
+      ],
+      apple: { url: "/brand/apple-touch-icon.png", sizes: "180x180" },
+    },
     openGraph: { type: "website", siteName: "QOWL", locale: "en_IN", images: s?.seo.ogImageUrl ? [s.seo.ogImageUrl] : ["/brand/icon-512.png"] },
     twitter: { card: "summary_large_image" },
     formatDetection: { telephone: false },
