@@ -7,6 +7,7 @@ import "@fontsource/cormorant-garamond/400-italic.css";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 import { getSettings } from "@/server/services/settings";
+import { Analytics } from "@vercel/analytics/next";
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings().catch(() => null);
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to content
         </a>
         <ToastProvider>{children}</ToastProvider>
+        <Analytics />
       </body>
     </html>
   );
