@@ -21,6 +21,8 @@ export function Header({ links, secondary }: { links: NavLink[]; secondary: NavL
   const overlay = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  // The menu slides in from the side its button is on (left on mobile, right on desktop).
+  const [menuSide, setMenuSide] = useState<"left" | "right">("left");
   const [searchOpen, setSearchOpen] = useState(false);
   const { cartCount, setDrawerOpen, user } = useStore();
 
@@ -69,7 +71,7 @@ export function Header({ links, secondary }: { links: NavLink[]; secondary: NavL
       >
         <div className="mx-auto grid h-[68px] max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center px-2 sm:px-4 lg:h-[84px] lg:px-8">
           <nav aria-label="Primary" className="flex items-center">
-            <button type="button" className={cn(iconBtn, "lg:hidden")} aria-label="Open menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}>
+            <button type="button" className={cn(iconBtn, "lg:hidden")} aria-label="Open menu" aria-expanded={menuOpen} onClick={() => { setMenuSide("left"); setMenuOpen(true); }}>
               <Menu className="h-[22px] w-[22px]" strokeWidth={1.4} />
             </button>
             <ul className="hidden items-center gap-9 lg:flex">
@@ -101,13 +103,13 @@ export function Header({ links, secondary }: { links: NavLink[]; secondary: NavL
                 {cartCount}
               </span>
             </button>
-            <button type="button" className={cn(iconBtn, "hidden lg:inline-flex")} aria-label="Open menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}>
+            <button type="button" className={cn(iconBtn, "hidden lg:inline-flex")} aria-label="Open menu" aria-expanded={menuOpen} onClick={() => { setMenuSide("right"); setMenuOpen(true); }}>
               <Menu className="h-[22px] w-[22px]" strokeWidth={1.4} />
             </button>
           </div>
         </div>
       </header>
-      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} links={links} secondary={secondary} />
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} links={links} secondary={secondary} side={menuSide} />
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
       <CartDrawer />
     </>
