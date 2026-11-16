@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL } from "@/lib/brand";
 /**
  * Default transactional templates. Admins can override subject/body per key
  * in Admin → Settings → Email templates. Placeholders use {{name}} syntax and
@@ -97,8 +98,8 @@ export function interpolate(text: string, vars: Record<string, string | number |
 /** Renders plain-text template to a minimal branded HTML email with escaping. */
 export function renderEmail(subjectT: string, bodyT: string, vars: Record<string, string | number | undefined | null>) {
   const subject = interpolate(subjectT, vars).replace(/[\r\n]+/g, " ").slice(0, 200);
-  const text = interpolate(bodyT, vars);
-  const htmlBody = esc(text)
+  const text = `${interpolate(bodyT, vars)}\n\nQuestions? Write to ${SUPPORT_EMAIL}`;
+  const htmlBody = esc(text.replace(/\n\nQuestions\? Write to [^\n]+$/, ""))
     .split(/\n{2,}/)
     .map((para) => `<p style="margin:0 0 16px">${para.replace(/\n/g, "<br>").replace(/(https?:\/\/[^\s<]+)/g, (u) => `<a href="${u}" style="color:#073D2D">${u}</a>`)}</p>`)
     .join("");
@@ -107,7 +108,7 @@ export function renderEmail(subjectT: string, bodyT: string, vars: Record<string
 <div style="font-family:Georgia,serif;letter-spacing:.3em;font-size:20px;color:#073D2D;margin-bottom:24px">QOWL</div>
 <div style="font-size:15px;line-height:1.6">${htmlBody}</div>
 <hr style="border:none;border-top:1px solid #E5E3DE;margin:24px 0">
-<div style="font-size:12px;color:#6b6b6b">This is a transactional email about your QOWL account or order.</div>
+<div style="font-size:12px;color:#6b6b6b">This is a transactional email about your QOWL account or order. Need help? <a href="mailto:${SUPPORT_EMAIL}" style="color:#073D2D">${SUPPORT_EMAIL}</a></div>
 </div></body></html>`;
   return { subject, text, html };
 }

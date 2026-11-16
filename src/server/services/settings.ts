@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { z } from "zod";
+import { SUPPORT_EMAIL } from "@/lib/brand";
 import { db } from "@/lib/db";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -22,12 +23,12 @@ export const settingsSchemas = {
     gstin: z.string().regex(/^$|^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/, "Invalid GSTIN format").default(""),
     sellerState: z.string().default(""),
     registeredAddress: z.string().default(""),
-    supportEmail: z.string().email().or(z.literal("")).default(""),
+    supportEmail: z.string().email().or(z.literal("")).default(SUPPORT_EMAIL),
     supportPhone: z.string().default(""),
     supportHours: z.string().default(""),
     grievanceOfficerName: z.string().default(""),
     grievanceOfficerDesignation: z.string().default(""),
-    grievanceOfficerEmail: z.string().email().or(z.literal("")).default(""),
+    grievanceOfficerEmail: z.string().email().or(z.literal("")).default(SUPPORT_EMAIL),
     grievanceOfficerPhone: z.string().default(""),
   }),
   social: z.object({ instagram: url, youtube: url, pinterest: url, x: url, facebook: url }),

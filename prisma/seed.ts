@@ -354,7 +354,7 @@ async function collections() {
 async function fixtures() {
   const now = new Date();
   const settings: Record<string, Prisma.InputJsonValue> = {
-    store: { brandName: "QOWL", establishedLine: "Est. 2026 — India", sellerState: "Maharashtra", supportEmail: "support@qowl.example", supportHours: "Mon–Sat, 10am–6pm IST (dev fixture)", tagline: "Wear Your Own Code.", description: "Independent streetwear for those who write their own code." },
+    store: { brandName: "QOWL", establishedLine: "Est. 2026 — India", sellerState: "Maharashtra", supportEmail: "support@qowlstore.com", supportHours: "Mon–Sat, 10am–6pm IST (dev fixture)", tagline: "Wear Your Own Code.", description: "Independent streetwear for those who write their own code." },
     shipping: { flatRatePaise: 9900, freeShippingThresholdPaise: null, deliverAllIndia: true, serviceablePincodePrefixes: [], blockedPincodes: [], estimateMinDays: null, estimateMaxDays: null, dispatchNote: "Development fixture rate.", defaultWeightGrams: 400 },
     payments: { onlineEnabled: true, codEnabled: true, codMinOrderPaise: null, codMaxOrderPaise: 500000, codFeePaise: 0, codPincodePrefixes: [], codBlockedPincodes: [], codMaxOpenOrdersPerPhone: 2 },
     returns: { allowReturns: true, allowExchanges: true, windowDays: 7, requirePhotos: false, policySummary: "Development fixture policy: 7-day returns and exchanges on unworn items." },
