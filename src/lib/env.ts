@@ -29,8 +29,8 @@ const schema = z
 
     EMAIL_PROVIDER: z.enum(["resend", "console"]).default("console"),
     RESEND_API_KEY: z.string().optional(),
-    EMAIL_FROM: z.string().default("QOWL <no-reply@example.invalid>"),
-    EMAIL_REPLY_TO: z.string().optional(),
+    EMAIL_FROM: z.string().default("QOWL <support@qowlstore.com>"),
+    EMAIL_REPLY_TO: z.string().default("support@qowlstore.com"),
 
     // SMS/WhatsApp require DLT-registered templates and explicit consent; the
     // adapter interface exists but no provider is wired up yet.

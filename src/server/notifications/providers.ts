@@ -1,4 +1,5 @@
 import "server-only";
+import { SUPPORT_EMAIL } from "@/lib/brand";
 import { logger } from "@/lib/logger";
 
 export interface EmailMessage { to: string; subject: string; html: string; text: string }
@@ -30,7 +31,7 @@ class ResendEmailProvider implements EmailProvider {
 
 export function getEmailProvider(): EmailProvider {
   if (process.env.EMAIL_PROVIDER === "resend" && process.env.RESEND_API_KEY) {
-    return new ResendEmailProvider(process.env.RESEND_API_KEY, process.env.EMAIL_FROM ?? "QOWL <no-reply@example.invalid>", process.env.EMAIL_REPLY_TO);
+    return new ResendEmailProvider(process.env.RESEND_API_KEY, process.env.EMAIL_FROM || `QOWL <${SUPPORT_EMAIL}>`, process.env.EMAIL_REPLY_TO || SUPPORT_EMAIL);
   }
   return new ConsoleEmailProvider();
 }
