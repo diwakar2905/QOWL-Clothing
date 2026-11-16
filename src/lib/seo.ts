@@ -70,6 +70,7 @@ export type StoreFacts = {
   brandName: string;
   legalName: string;
   description: string;
+  slogan: string;
   supportEmail: string;
   supportPhone: string;
   social: string[];
@@ -78,7 +79,7 @@ export type StoreFacts = {
 };
 
 export function storeFacts(settings: {
-  store: { brandName: string; legalName: string; description?: string; supportEmail: string; supportPhone: string };
+  store: { brandName: string; legalName: string; description?: string; tagline?: string; supportEmail: string; supportPhone: string };
   social: Record<string, string | null | undefined>;
   shipping: { flatRatePaise?: number | null; freeShippingThresholdPaise?: number | null };
   returns: { allowReturns: boolean; windowDays?: number | null };
@@ -87,6 +88,7 @@ export function storeFacts(settings: {
     brandName: settings.store.brandName || BRAND,
     legalName: settings.store.legalName,
     description: settings.store.description ?? "",
+    slogan: (settings.store.tagline ?? "").replace(/\.$/, ""),
     supportEmail: settings.store.supportEmail,
     supportPhone: settings.store.supportPhone,
     social: Object.values(settings.social).filter((u): u is string => !!u),
@@ -134,6 +136,10 @@ export function organizationLd(f: StoreFacts) {
     url: `${base}/`,
     logo: { "@type": "ImageObject", url: `${base}/brand/icon-512.png`, width: 512, height: 512 },
     ...(f.description ? { description: f.description } : {}),
+    ...(f.slogan ? { slogan: f.slogan } : {}),
+    ...(f.supportEmail ? { email: f.supportEmail } : {}),
+    areaServed: { "@type": "Country", name: "India" },
+    knowsAbout: ["Streetwear", "Oversized T-shirts", "Hoodies", "Graphic apparel"],
     ...(f.social.length ? { sameAs: f.social } : {}),
     ...(contact ? { contactPoint: contact } : {}),
     ...(returns ? { hasMerchantReturnPolicy: returns } : {}),
@@ -263,4 +269,29 @@ export function listingCanonical(path: string, sp: { page?: string | string[] })
   const raw = Array.isArray(sp.page) ? sp.page[0] : sp.page;
   const page = Number(raw);
   return Number.isInteger(page) && page > 1 && page < 1000 ? `${path}?page=${page}` : path;
+}
+
+/** "3 pieces · from ₹999" — factual listing summary from live prices (paise). */
+export function listingFacts(total: number, pricesPaise: number[]): string {
+  if (!total) return "";
+  const min = pricesPaise.length ? Math.min(...pricesPaise) : null;
+  const rupees = min != null ? `₹${Math.round(min / 100).toLocaleString("en-IN")}` : null;
+  return [`${total} ${total === 1 ? "piece" : "pieces"}`, rupees && `from ${rupees}`].filter(Boolean).join(" · ");
+}
+
+/** ItemList for a product listing page: the products shown, in display order. */
+export function itemListLd(path: string, slugs: string[], offset = 0) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "@id": `${absoluteUrl(path)}#items`,
+    numberOfItems: slugs.length,
+    itemListElement: slugs.map((slug, i) => ({ "@type": "ListItem", position: offset + i + 1, url: absoluteUrl(`/products/${slug}`) })),
+  };
+}
+
+/** AboutPage for /our-story, tied to the store Organization node. */
+export function aboutPageLd(description: string) {
+  const base = siteUrl();
+  return { "@type": "AboutPage", "@id": `${base}/our-story#page`, url: `${base}/our-story`, name: "Our Story", description, inLanguage: "en-IN", about: { "@id": `${base}/#organization` }, isPartOf: { "@id": `${base}/#website` } };
 }

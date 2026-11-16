@@ -70,9 +70,9 @@ export const settingsSchemas = {
     reviewedByAdvisor: z.boolean().default(false),
   }),
   seo: z.object({
-    defaultTitle: z.string().default("QOWL | Wear Your Own Code"),
+    defaultTitle: z.string().default("QOWL | Indian Streetwear: Oversized T-shirts & Hoodies"),
     titleTemplate: z.string().default("%s | QOWL"),
-    defaultDescription: z.string().default("QOWL is an independent Indian streetwear label. Explore Drop 001: The Unwritten."),
+    defaultDescription: z.string().default("QOWL is an independent Indian streetwear label: oversized T-shirts and pullover hoodies with original, gothic-inspired artwork, released in small numbered drops. Shop Drop 001: The Unwritten."),
     ogImageUrl: z.string().default(""),
   }),
   newsletter: z.object({

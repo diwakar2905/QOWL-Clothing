@@ -47,7 +47,7 @@ export function Footer({ settings, pages, categories, showNewsletter }: FooterPr
           <div className="flex items-start gap-8">
           <div className="grid flex-1 grid-cols-2 gap-8 sm:grid-cols-3">
             <FooterCol title="Shop" links={[{ href: "/new-in", label: "New In" }, { href: "/collections/drop-001", label: "Drop 001" }, ...categories.map((c) => ({ href: `/category/${c.slug}`, label: c.name })), { href: "/collections", label: "Collections" }]} />
-            <FooterCol title="Help" links={[{ href: "/orders/track", label: "Track your order" }, ...help.map((p) => ({ href: `/pages/${p.slug}`, label: p.title })), { href: "/size-guide", label: "Size guide" }, { href: "/contact", label: "Contact us" }]} />
+            <FooterCol title="Help" links={[{ href: "/orders/track", label: "Track your order" }, ...help.map((p) => ({ href: `/pages/${p.slug}`, label: p.title })), { href: "/size-guide", label: "Size guide" }, { href: "/faq", label: "FAQ" }, { href: "/contact", label: "Contact us" }]} />
             <FooterCol title="QOWL" links={[{ href: "/our-story", label: "Our story" }, { href: "/lookbook", label: "Lookbook" }, { href: "/account", label: "My account" }, { href: "/account/preferences", label: "Newsletter preferences" }, ...social.map(([k, url]) => ({ href: url, label: labels[k] ?? k, external: true }))]} />
           </div>
           <div className="-my-6 hidden shrink-0 lg:block">

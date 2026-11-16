@@ -34,6 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/new-in`, lastModified: catalogUpdated, changeFrequency: "daily", priority: 0.6 },
     { url: `${base}/collections`, lastModified: latest(...collections.map((c) => c.updatedAt)), changeFrequency: "weekly", priority: 0.7 },
     { url: `${base}/our-story`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/faq`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${base}/contact`, changeFrequency: "monthly", priority: 0.3 },
     ...(approvedGuides.length ? [{ url: `${base}/size-guide`, lastModified: latest(...approvedGuides.map((g) => g.updatedAt)), changeFrequency: "monthly" as const, priority: 0.4 }] : []),
     ...(lookbook.length ? [{ url: `${base}/lookbook`, lastModified: latest(...lookbook.map((l) => l.createdAt)), changeFrequency: "monthly" as const, priority: 0.5 }] : []),

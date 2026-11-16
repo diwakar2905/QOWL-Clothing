@@ -29,17 +29,20 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const p = await load(slug, preview);
   // The page itself returns the 404; here we only make sure a missing product is never indexable.
   if (!p) return { title: "Product not found", robots: { index: false, follow: false } };
-  const img = p.images[0];
   const title = productTitle(p);
-  const description = p.seoDescription || metaDescription(p.description);
+  // e.g. "Eclipse Pullover Hoodie by QOWL, ₹2,199. Sizes S–XXL in 3 colours. <first line of the description>"
+  const sizes = [...new Set(p.variants.map((v) => v.size))];
+  const facts = [`${title} by QOWL, ${formatINR(p.effectivePrice)}.`, sizes.length > 1 ? `Sizes ${sizes[0]}–${sizes.at(-1)}${p.colors.length > 1 ? ` in ${p.colors.length} colours` : ""}.` : null].filter(Boolean).join(" ");
+  const description = p.seoDescription || metaDescription(`${facts} ${p.description}`);
   return {
     title,
     description,
     // Colour/size query params preselect options but always canonicalise to the product.
     alternates: { canonical: `/products/${p.slug}` },
     ...(preview ? { robots: { index: false, follow: false } } : {}),
-    openGraph: { type: "website", title: `${title} | QOWL`, description, url: absoluteUrl(`/products/${p.slug}`), images: img ? [{ url: img.url, alt: img.alt }] : undefined },
-    twitter: { card: "summary_large_image", title: `${title} | QOWL`, description, images: img ? [img.url] : undefined },
+    // Share image: the branded card from ./opengraph-image.tsx
+    openGraph: { type: "website", title: `${title} | QOWL`, description, url: absoluteUrl(`/products/${p.slug}`) },
+    twitter: { card: "summary_large_image", title: `${title} | QOWL`, description },
   };
 }
 

@@ -84,11 +84,21 @@ const nextConfig: NextConfig = {
   htmlLimitedBots: /Googlebot|Google-InspectionTool|Storebot-Google|AdsBot-Google|bingbot|BingPreview|DuckDuckBot|YandexBot|Baiduspider|Applebot|OAI-SearchBot|ChatGPT-User|PerplexityBot|Perplexity-User|Claude-SearchBot|Claude-User|facebookexternalhit|Twitterbot|LinkedInBot|WhatsApp|Slackbot|Discordbot/i,
   async redirects() {
     // Common brand-page paths people (and crawlers) guess.
-    return [
+    const brandPaths = [
       { source: "/about", destination: "/our-story", permanent: true },
       { source: "/about-us", destination: "/our-story", permanent: true },
       { source: "/contact-us", destination: "/contact", permanent: true },
     ];
+    // Production only: send pages on *.vercel.app aliases (e.g. qowlclothing.vercel.app)
+    // to the custom domain so search engines consolidate on one host. Only once APP_URL
+    // is the custom domain (no loop), and never for /api/* — payment/shipping webhooks
+    // and cron may still call the old host and don't follow redirects.
+    const canonicalOrigin = process.env.APP_URL?.replace(/\/+$/, "") ?? "";
+    const toCustomDomain =
+      process.env.VERCEL_ENV === "production" && appHost && !appHost.endsWith(".vercel.app") && !/^(localhost|127\.)/.test(appHost)
+        ? [{ source: "/:path((?!api/).*)", has: [{ type: "host" as const, value: ".*\\.vercel\\.app" }], destination: `${canonicalOrigin}/:path`, permanent: true }]
+        : [];
+    return [...toCustomDomain, ...brandPaths];
   },
   async headers() {
     return [

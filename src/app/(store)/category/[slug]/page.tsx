@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getCategory } from "@/server/services/catalog";
+import { getCategory, listProducts } from "@/server/services/catalog";
 import { ProductListing } from "@/components/store/listing";
 import type { SearchParams } from "@/components/store/listing-params";
-import { listingCanonical } from "@/lib/seo";
+import { listingCanonical, listingFacts, metaDescription } from "@/lib/seo";
 import { Markdown } from "@/components/ui/markdown";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<SearchParams> };
@@ -11,7 +11,9 @@ type Props = { params: Promise<{ slug: string }>; searchParams: Promise<SearchPa
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const c = await getCategory((await params).slug);
   if (!c) notFound();
-  const description = c.seoDescription ?? c.description ?? `Shop ${c.name.toLowerCase()} from QOWL, independent Indian streetwear.`;
+  const { items, total } = await listProducts({ category: c.slug, perPage: 48 });
+  const facts = listingFacts(total, items.map((i) => i.price));
+  const description = c.seoDescription ?? metaDescription(`Shop ${c.name.toLowerCase()} by QOWL, independent Indian streetwear${facts ? `: ${facts}` : ""}. ${c.description ?? ""}`);
   return { title: c.seoTitle ?? c.name, description, alternates: { canonical: listingCanonical(`/category/${c.slug}`, await searchParams) }, openGraph: { title: `${c.seoTitle ?? c.name} | QOWL`, description } };
 }
 

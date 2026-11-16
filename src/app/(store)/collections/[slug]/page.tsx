@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { getCollection } from "@/server/services/catalog";
+import { getCollection, listProducts } from "@/server/services/catalog";
 import { ProductListing } from "@/components/store/listing";
 import type { SearchParams } from "@/components/store/listing-params";
 import { safeInternalPath } from "@/lib/utils";
-import { listingCanonical } from "@/lib/seo";
+import { listingCanonical, listingFacts, metaDescription } from "@/lib/seo";
 import { Markdown } from "@/components/ui/markdown";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<SearchParams> };
@@ -12,11 +12,12 @@ type Props = { params: Promise<{ slug: string }>; searchParams: Promise<SearchPa
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const c = await getCollection((await params).slug);
   if (!c) notFound();
+  const { items, total } = await listProducts({ collection: c.slug, perPage: 48 });
+  const facts = listingFacts(total, items.map((i) => i.price));
   return {
     title: c.seoTitle ?? c.title,
-    description: c.seoDescription ?? c.description ?? undefined,
+    description: c.seoDescription ?? metaDescription(`${c.title} by QOWL${facts ? `: ${facts}` : ""}. ${c.description ?? ""}`),
     alternates: { canonical: listingCanonical(`/collections/${c.slug}`, await searchParams) },
-    openGraph: c.heroImageUrl ? { images: [c.heroImageUrl] } : undefined,
   };
 }
 
