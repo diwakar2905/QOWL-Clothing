@@ -4,6 +4,7 @@ import { visibleCollectionWhere, visibleProductWhere } from "@/server/services/c
 import { formatINR } from "@/lib/money";
 import { absoluteUrl, BRAND, isIndexable, productTitle } from "@/lib/seo";
 import { headers } from "next/headers";
+import { getStoreFaq } from "@/server/faq";
 
 export const dynamic = "force-dynamic";
 
@@ -15,11 +16,12 @@ export const dynamic = "force-dynamic";
  */
 export async function GET() {
   if (!isIndexable((await headers()).get("host"))) return new Response("Not found", { status: 404 });
-  const [s, products, collections, categories] = await Promise.all([
+  const [s, products, collections, categories, faq] = await Promise.all([
     getSettings(),
     db.product.findMany({ where: visibleProductWhere(), select: { name: true, slug: true, garmentType: true, seoTitle: true, subtitle: true, price: true, mrp: true }, orderBy: { sortOrder: "asc" } }),
     db.collection.findMany({ where: { ...visibleCollectionWhere(), linkType: "PRODUCTS" }, select: { title: true, slug: true, description: true } }),
     db.category.findMany({ where: { isActive: true }, select: { name: true, slug: true } }),
+    getStoreFaq(),
   ]);
   const st = s.store;
   const lines = [
@@ -31,11 +33,13 @@ export async function GET() {
     `- Website: ${absoluteUrl("/")}`,
     "- Market: India. Prices in INR (inclusive of GST).",
     ...(categories.length ? [`- Product categories: ${categories.map((c) => c.name).join(", ")}`] : []),
+    ...(st.tagline ? [`- Tagline: ${st.tagline}`] : []),
     ...(st.establishedLine ? [`- ${st.establishedLine}`] : []),
     ...(st.supportEmail ? [`- Customer care: ${st.supportEmail}${st.supportPhone ? `, ${st.supportPhone}` : ""}`] : []),
     "",
     "## Key pages",
     `- [Our story](${absoluteUrl("/our-story")})`,
+    `- [FAQ](${absoluteUrl("/faq")}): shipping, delivery, returns, sizes, payments`,
     `- [Shop all](${absoluteUrl("/shop")})`,
     ...categories.map((c) => `- [${c.name}](${absoluteUrl(`/category/${c.slug}`)})`),
     ...collections.map((c) => `- [${c.title}](${absoluteUrl(`/collections/${c.slug}`)})${c.description ? `: ${c.description}` : ""}`),
@@ -44,6 +48,8 @@ export async function GET() {
     "## Products",
     ...products.map((p) => `- [${productTitle(p)}](${absoluteUrl(`/products/${p.slug}`)}): ${formatINR(p.price)}`),
     "",
+    "## FAQ",
+    ...faq.flatMap((f) => [`### ${f.q}`, f.a, ""]),
   ];
   return new Response(lines.join("\n"), { headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, s-maxage=3600" } });
 }

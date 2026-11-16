@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { listProducts, type ListingFilters } from "@/server/services/catalog";
-import { Breadcrumbs, Container, EmptyState, SectionHeading } from "@/components/ui/misc";
+import { Breadcrumbs, Container, EmptyState, JsonLd, SectionHeading } from "@/components/ui/misc";
+import { itemListLd } from "@/lib/seo";
 import { ButtonLink } from "@/components/ui/button";
 import { ProductCard } from "./product-card";
 import { ListingToolbar } from "./filters";
@@ -66,6 +67,7 @@ export async function ProductListing({
         />
       ) : (
         <>
+          <JsonLd data={itemListLd(path, result.items.map((p) => p.slug), (result.page - 1) * 24)} />
           <ul className="mt-8 grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-5 lg:grid-cols-3 xl:grid-cols-4">
             {result.items.map((p, i) => (
               <li key={p.id}><ProductCard product={p} priority={i < 4} /></li>

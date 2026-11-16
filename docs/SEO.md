@@ -1,6 +1,6 @@
 # QOWL — Search (SEO / GEO / AEO) implementation report
 
-Production domain (from `APP_URL` and the live deployment): **https://qowlclothing.vercel.app**.
+Production domain: **https://www.qowlstore.com** (apex `qowlstore.com` 308-redirects to `www`). Earlier sections were written against `qowlclothing.vercel.app`, which now redirects to the custom domain.
 No custom domain is configured yet; when one is added, update `APP_URL` and everything
 below (canonicals, sitemap, feed, JSON-LD) follows automatically.
 
@@ -185,3 +185,46 @@ No keyword tools or Search Console data were available, so there are no volumes,
 | 4–6 | Merchant Center diagnostics → fix; GA4 + consent; first two guides (oversized fit guide, care guide) from real production knowledge |
 | 6–9 | Journal section in CMS; publish 2–4 reviewed articles; internal links from guides to categories/products; press kit; outreach list |
 | 9–13 | Review Search Console queries (branded vs non-branded), refine titles/copy for pages with impressions but low CTR; first AI-visibility review; plan Drop 002 landing page and URL structure in advance |
+
+## K. v2: qowlstore.com, share cards, FAQ (16 Nov 2026)
+
+### What changed
+- **Custom domain.** In production builds, any `*.vercel.app` host 308-redirects to `APP_URL` (path kept, `/api/*` excluded so webhooks and health checks still work). This only applies when `APP_URL` is set to a non-vercel.app domain.
+- **Branded share images.** `opengraph-image` / `twitter-image` routes (1200×630 PNG) for the home page, every product (photo, name, type, price, MRP, sizes and colours), categories and collections (piece count, starting price, three product photos). Built with `next/og` from live data in `src/server/og.tsx`.
+- **Expressive, data-driven metadata.**
+  - Home: "QOWL | Indian Streetwear: Oversized T-shirts & Hoodies".
+  - Products: price, size range and colour count go in front of the description.
+  - Categories and collections: live facts, e.g. "3 pieces · from ₹1,899".
+  - Our Story: rewritten description.
+- **`/faq`.** Answers are generated from Settings and the catalogue (`src/lib/faq.ts`). A question is left out when its answer isn't configured, for example shipping rate, delivery estimate, return window or COD. The page carries FAQPage JSON-LD and is linked in the footer under Help and in the sitemap.
+- **More structured data.**
+  - ItemList on every product listing.
+  - AboutPage on /our-story.
+  - Organization now includes `slogan`, `email`, `areaServed` (India) and `knowsAbout`.
+- **`/llms.txt`.** Now includes the tagline, a link to the FAQ and the full FAQ text.
+
+Verified on a production build (`VERCEL_ENV=production APP_URL=https://www.qowlstore.com`):
+
+| Check | Result |
+|---|---|
+| `qowlclothing.vercel.app/faq` | 308 to `https://www.qowlstore.com/faq` |
+| `qowlclothing.vercel.app/api/health` | 200, not redirected |
+| `www.qowlstore.com` pages | `index, follow`; canonical on www.qowlstore.com |
+| Share-card routes | Return 200 `image/png` |
+
+### Domain migration checklist (owner)
+1. **Vercel → Settings → Environment Variables (Production):** set `APP_URL=https://www.qowlstore.com`, then redeploy. Until this is done, the live domain serves `noindex` with a vercel.app canonical.
+2. **Google Cloud Console → OAuth client:**
+   - Add the authorised redirect URI `https://www.qowlstore.com/api/auth/google/callback`.
+   - Add the JavaScript origin `https://www.qowlstore.com`.
+3. **Razorpay → Webhooks:** point the webhook to `https://www.qowlstore.com/api/webhooks/payments/razorpay`. The old vercel.app URL still works, because `/api` is not redirected.
+4. **Google Search Console:**
+   - Add a **Domain property** for `qowlstore.com`, verified with a DNS TXT record.
+   - Submit `https://www.qowlstore.com/sitemap.xml`.
+   - Request indexing for `/`, `/collections/drop-001` and `/faq`.
+5. **Bing Webmaster Tools:** import the site from Search Console, then submit the sitemap.
+6. **Google Merchant Center:**
+   - Change the website to `https://www.qowlstore.com`, then re-claim it.
+   - Set the feed URL to `https://www.qowlstore.com/feeds/google-merchant.xml`.
+7. **IndexNow:** no change is needed. The key file is served on the new host automatically.
+8. **Social profiles (Instagram bio and others):** update links to `qowlstore.com`.

@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { Breadcrumbs, Container } from "@/components/ui/misc";
+import { Breadcrumbs, Container, JsonLd } from "@/components/ui/misc";
+import { aboutPageLd, graph } from "@/lib/seo";
 import { Sparkle } from "@/components/ui/icons";
 import { buttonClass } from "@/components/ui/button";
 
+const DESCRIPTION = "QOWL is independent Indian streetwear for people who write their own code: oversized tees and heavyweight hoodies with original artwork, released in small numbered drops. Drop 001: The Unwritten.";
+
 export const metadata: Metadata = {
-  title: "Our Story",
-  description: "QOWL is independent Indian streetwear for people who write their own code. Drop 001 — The Unwritten.",
+  title: "Our Story: Independent Indian Streetwear",
+  description: DESCRIPTION,
   alternates: { canonical: "/our-story" },
 };
 
@@ -53,6 +56,7 @@ export default function OurStoryPage() {
         <Link href="/collections/drop-001" className={buttonClass("primary", "lg")}>Shop Drop 001</Link>
         <Link href="/lookbook" className={buttonClass("outline", "lg")}>View the lookbook</Link>
       </div>
+      <JsonLd data={graph(aboutPageLd(DESCRIPTION))} />
     </Container>
   );
 }
